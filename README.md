@@ -1,134 +1,228 @@
-# TypeScript Single Package Project Template
+<div align='center'>
 
-This template provides an opinionated setup for a single package TypeScript project.
+# ai-assert-schema
 
-## 🚀 Features
+<p align="center">Assert schemas for compatibility against your AI models</p>
+<p align="center">
+  <a href="https://www.npmjs.com/package/ai-assert-schema" alt="ai-assert-schema"><img src="https://img.shields.io/npm/dt/ai-assert-schema?label=ai-assert-schema"></a> <a href="https://github.com/zirkelc/ai-assert-schema/actions/workflows/ci.yml" alt="CI"><img src="https://img.shields.io/github/actions/workflow/status/zirkelc/ai-assert-schema/ci.yml?branch=main"></a>
+</p>
 
-- [PNPM](https://pnpm.io/) for efficient package management
-- [Biome](https://biomejs.dev/) for linting and formatting
-- [Vitest](https://vitest.dev/) for fast, modern testing
-- [tsdown](https://github.com/rolldown/tsdown) for TypeScript building and bundling
-- [tsx](https://tsx.is/) for running TypeScript files
-- [Husky](https://github.com/typicode/husky) for Git hooks
-- [GitHub Actions](.github/workflows/ci.yml) for continuous integration
-- [VSCode](.vscode/) debug configuration and editor settings
-- [@total-typescript/tsconfig](https://github.com/total-typescript/tsconfig) for TypeScript configuration
-- [Are The Types Wrong?](https://github.com/arethetypeswrong/arethetypeswrong.github.io) for type validation
-- [publint](https://github.com/publint/publint) for package.json validation
-- [EditorConfig](https://editorconfig.org/) for consistent coding styles
+</div>
 
-## 🚀 Getting Started
+## Why?
 
-### 1. Create a new repository
+AI providers like OpenAI only support a [subset of JSON Schema](https://platform.openai.com/docs/guides/structured-outputs) for structured outputs and tool calling. If you use unsupported features, you may get invalid data not matching your schema or an error at runtime. This library validates your schemas against the constraints of your chosen AI model, so you can catch issues early and transparently.
 
-Create a new repository [using this template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template)
+## Installation
 
-### 2. Replace placeholders
-
-Replace all occurences of the following placeholders with the correct values:
-
-| Placeholder | File | Description |
-| --- | --- | --- |
-| `<PACKAGE>` | `package.json` | Your package name |
-| `<DESCRIPTION>` | `package.json` | Your package description |
-| `<USERNAME>` | `package.json` | Your GitHub username |
-| `<REPO>` | `package.json` | Your repository name |
-| `<AUTHOR>` | `package.json` | Your name |
-| `<LICENSE>` | `package.json` | Your license |
-
-### 3. Apply ToDos
-
-Find all occurrences of `TODO` and apply them:
-
-| TODO | File | Description |
-| --- | --- | --- |
-| `TODO: PREVIEW` | `.github/workflows/ci.yml` | Create [preview releases](#preview-releases) |
-| `TODO: PUBLISH` | `.github/workflows/ci.yml` | [Publish to NPM](#publish-npm) |
-
-### 4. Install, Build, Test
-
-Verify your project is working by running `install`, `build`, and `test`:
-
-```sh
-pnpm install
-pnpm build
-pnpm test
+```bash
+npm install ai-assert-schema
 ```
 
-Happy coding! 🎉
+## Usage
 
-## 📋 Details
+This library works with any [Standard JSON Schema](https://standardschema.dev/json-schema) library (Zod, ArkType, Valibot) or raw JSON Schema objects. It can be used at run-time or test-time in your unit tests.
 
-### Package
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+import { z } from 'zod';
 
-The [`package.json`](package.json) is configured as ESM (`"type": "module"`), but supports dual publishing with both ESM and CJS module formats.
+const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() });
+const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() });
 
-### Biome
+const validSchema = z.object({
+  // Nullable is allowed
+  name: z.string().nullable(),
+  // z.union() produces anyOf
+  animal: z.union([Dog, Cat]),
+});
 
-[`biome.jsonc`](biome.jsonc) contains the default [Biome configuration](https://biomejs.dev/reference/configuration/) with minimal formatting adjustments. It uses the formatter settings from the [`.editorconfig`](.editorconfig) file.
+const invalidSchema = z.object({
+  // Optional is not allowed
+  name: z.string().optional(),
+  // z.discriminatedUnion() produces oneOf
+  animal: z.discriminatedUnion('type', [Dog, Cat]),
+});
 
-### Vitest
+// Returns the schema if valid
+assertSchema({ schema: validSchema, model: 'openai/gpt-4o-mini' });
+assertSchema({ schema: validSchema, model: { provider: 'openai', modelId: 'gpt-4o-mini' } });
 
-An empty Vitest config is provided in [`vitest.config.ts`](vitest.config.ts).
+// Throws an error if invalid
+assertSchema({ schema: invalidSchema, model: 'openai/gpt-4o-mini' });
+assertSchema({ schema: invalidSchema, model: { provider: 'openai', modelId: 'gpt-4o-mini' } });
+```
 
-### Build and Run
+### Assert at Run-time
 
-- `tsdown` builds `./src/index.ts`, outputting an ES module to the `dist` folder.
-- `tsx` compiles and runs TypeScript files on-the-fly.
+Wrap your schema and model with `assertSchema({ schema, model })`. If the schema is valid, it will be returned unchanged. Otherwise, an error will be thrown before making the API call.
 
-### Git Hooks
+> [NOTE!] This example uses the [AI SDK](https://www.npmjs.com/package/ai) to pass the model, but you can also provide a string or plain object.
 
-[Husky](https://github.com/typicode/husky) runs the [.husky/pre-commit](.husky/pre-commit) hook to lint staged files.
+```typescript
+import { openai } from '@ai-sdk/openai';
+import { generateText, Output } from 'ai';
+import { assertSchema } from 'ai-assert-schema';
+import { z } from 'zod';
 
-### Continuous Integration
+const model = openai('gpt-4o-mini');
 
-[`.github/workflows/ci.yml`](.github/workflows/ci.yml) defines a GitHub Actions workflow to run linting and tests on commits and pull requests.
+const result = await generateText({
+  model,
+  prompt: 'Describe a dog that barks',
+  output: Output.object({
+    schema: assertSchema({ schema, model }),
+  }),
+});
+```
 
-### VSCode Integration
+### Assert at Test-time
 
-#### Debugging
+Validate schemas in your test suite to catch issues during CI:
 
-[`.vscode/launch.json`](.vscode/launch.json) provides VSCode launch configurations:
-- `Debug (tsx)`: Run and debug TypeScript files
-- `Test (vitest)`: Debug tests
+```typescript
+import { expect, test } from 'vitest';
+import { assertSchema } from 'ai-assert-schema';
 
-It uses the [JavaScript Debug Terminal](https://code.visualstudio.com/docs/nodejs/nodejs-debugging) to run and debug.
+// Import your schema and model to test
+import { yourSchema, yourModel } from './your-schema-file';
 
-#### Editor Settings
+test('schema should be compatible with the model', () => {
+  expect(() =>
+    assertSchema({ schema: yourSchema, model: yourModel })
+  ).not.toThrow();
+});
+```
 
-[`.vscode/settings.json`](.vscode/settings.json) configures Biome as the formatter and enables format-on-save.
+## Providers
 
-### EditorConfig
+Currently, only OpenAI is supported. More providers will be added in the future.
 
-[`.editorconfig`](.editorconfig) ensures consistent coding styles across different editors and IDEs:
+### OpenAI
 
-- Uses spaces for indentation (2 spaces)
-- Sets UTF-8 charset
-- Ensures LF line endings
-- Trims trailing whitespace (except in Markdown files)
-- Inserts a final newline in files
+OpenAI's Structured Outputs have specific JSON Schema requirements. See the full constraint implementation in [`src/constraints/providers/openai.ts`](src/constraints/providers/openai.ts).
 
-This configuration complements Biome and helps maintain a consistent code style throughout the project.
+**Unsupported JSON Schema features:**
+- `oneOf`
+- `allOf`
+- `not`
+- `anyOf` at root level
+- `if/then/else` conditionals
+- `dependentRequired`, `dependentSchemas`
+- `patternProperties`
 
-### Types Validation
+**Required constraints:**
+- All properties must be required
+- Must use `additionalProperties: false`
 
-The project includes the `@arethetypeswrong/cli` CLI tool to validate TypeScript types in your package. It is integrated into `tsdown` and will run automatically during the build
+#### Examples
 
-### Publint
+**Discriminated Union vs Union**
 
-The project includes `publint` to validate your `package.json` file. It is integrated into `tsdown` and will run automatically during the build.
+Discriminated unions created with `z.discriminatedUnion()` convert to `oneOf` in JSON Schema, which is **not supported** by OpenAI.
 
-## Optional
+```typescript
+const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() });
+const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() });
 
-### <a name="publish-npm"></a> Publish to NPM
-[JS-DevTools/npm-publish](https://github.com/JS-DevTools/npm-publish) is a GitHub Action to publish packages to npm automatically by updating the version number.
+z.object({
+  animal: z.discriminatedUnion('type', [Dog, Cat]),
+});
+```
 
-To enable this, apply the `TODO: PUBLISH`.
+```json
+{
+  "properties": {
+    "animal": {
+      // 'oneOf' is not supported by OpenAI 
+      "oneOf": [{ "type": "object", ... }, { "type": "object", ... }]
+    }
+  }
+}
+```
 
-### <a name="preview-releases"></a> Preview Releases
+Union created with `z.union()` converts to `anyOf` in JSON Schema, which is supported by OpenAI.
 
-[pkg.pr.new](https://github.com/stackblitz-labs/pkg.pr.new) will automatically generate preview releases for every push and pull request. This allows you to test changes before publishing to npm.
+```typescript
+const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() });
+const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() });
 
-Must install GitHub App: [pkg.pr.new](https://github.com/apps/pkg-pr-new)
+z.object({
+  animal: z.union([Dog, Cat]),
+});
+```
 
-To enable this, apply the `TODO: PREVIEW`.
+```json
+{
+  "properties": {
+    "animal": {
+      // 'anyOf' is supported by OpenAI
+      "anyOf": [{ "type": "object", ... }, { "type": "object", ... }]
+    }
+  }
+}
+```
+
+**Optional vs Nullable**
+
+All properties must be required. Using `z.optional()` removes the property from the `required` array, which is **not supported** by OpenAI.
+
+```typescript
+z.object({
+  name: z.string().optional(),
+});
+```
+
+```jsonc
+{
+  "properties": {
+    "name": { "type": "string" }
+  },
+  "required": [] // 'name' is not required
+}
+```
+
+Using `z.nullable()` keeps the property required, but allows `null` as a valid type, which **is supported** by OpenAI.
+
+```typescript
+z.object({
+  name: z.string().nullable(),
+});
+```
+
+```json
+{
+  "properties": {
+    "name": { "type": ["string", "null"] }
+  },
+  "required": ["name"] // 'name' is required
+}
+```
+
+## Contributing
+
+Contributions are welcome!
+
+- **Add new providers**: Submit a PR with constraints for other AI providers (Anthropic, Google, etc.)
+- **Fix constraints**: If you find incorrect constraints, please open an issue or PR
+- **Provider implementations**: See [`src/constraints/providers/`](src/constraints/providers/) for examples
+
+## API
+
+```typescript
+function assertSchema<SCHEMA extends SchemaInput>(
+  options: AssertSchemaOptions<SCHEMA>
+): SCHEMA
+```
+
+**Parameters:**
+- `model` - Model identifier as `'provider/model-id'` string or `{ provider, modelId }` object
+- `schema` - Your schema (Zod, Standard Schema, or JSON Schema object)
+
+**Returns:** The input schema unchanged (for chaining)
+
+**Throws:** `SchemaAssertionError` when the schema contains unsupported features
+
+## License
+
+MIT
