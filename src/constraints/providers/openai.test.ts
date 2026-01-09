@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
-import { extractJSONSchema, validateSchema } from '../../index.js';
+import { validateSchema } from '../../assert.js';
+import { extractJSONSchema } from '../../schema.js';
 import type { JSONSchema } from '../../types.js';
 
 describe('OpenAI constraints', () => {
