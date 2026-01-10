@@ -1,6 +1,6 @@
 {
   "name": "ai-assert-schema",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "description": "Assert schemas for compatibility against your AI models",
   "packageManager": "pnpm@10.18.2",
   "types": "./dist/index.d.mts",
