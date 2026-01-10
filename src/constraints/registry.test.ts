@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { parseModel } from '../model.js';
 import type { ModelIdentifier } from '../types.js';
-import { openaiConstraints } from './providers/openai.js';
+import { openaiConstraints } from './openai/openai.js';
 import { providerRegistry } from './registry.js';
 
 describe('ProviderRegistry', () => {
@@ -15,8 +14,7 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const model = parseModel('my-custom-provider/v1');
-      const constraints = providerRegistry.resolve(model);
+      const constraints = providerRegistry.resolve('my-custom-provider/v1');
       expect(constraints.provider).toBe('my-custom-provider');
       expect(constraints.unsupported).toHaveLength(1);
       expect(constraints.unsupported[0]?.feature).toBe('anyOf');
@@ -31,8 +29,9 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const model = parseModel('exact-provider/exact-model');
-      const constraints = providerRegistry.resolve(model);
+      const constraints = providerRegistry.resolve(
+        'exact-provider/exact-model',
+      );
       expect(constraints.provider).toBe('exact-provider');
       expect(constraints.unsupported[0]?.feature).toBe('oneOf');
     });
@@ -56,8 +55,9 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const model = parseModel('priority-test/special-model');
-      const constraints = providerRegistry.resolve(model);
+      const constraints = providerRegistry.resolve(
+        'priority-test/special-model',
+      );
       // Exact match should win
       expect(constraints.provider).toBe('priority-test-exact');
       expect(constraints.unsupported).toEqual([]);
@@ -82,8 +82,9 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const model = parseModel('last-match-test/restricted-model');
-      const constraints = providerRegistry.resolve(model);
+      const constraints = providerRegistry.resolve(
+        'last-match-test/restricted-model',
+      );
       // Last matching pattern should win
       expect(constraints.provider).toBe('last-match-specific');
       expect(constraints.unsupported).toHaveLength(1);
@@ -107,23 +108,25 @@ describe('ProviderRegistry', () => {
 
   describe('resolve', () => {
     test('resolves constraints for string model identifier', () => {
-      const model = parseModel('openai/gpt-4o');
-      const constraints = providerRegistry.resolve(model);
+      const constraints = providerRegistry.resolve('openai/gpt-4o');
       expect(constraints.modelId).toBe('gpt-4o');
       expect(constraints.provider).toBe('openai');
     });
 
     test('resolves constraints for model object', () => {
-      const model = parseModel({ provider: 'openai', modelId: 'gpt-4o' });
-      const constraints = providerRegistry.resolve(model);
+      const constraints = providerRegistry.resolve({
+        provider: 'openai',
+        modelId: 'gpt-4o',
+      });
       expect(constraints.modelId).toBe('gpt-4o');
       expect(constraints.provider).toBe('openai');
     });
 
     test('returns unknown provider for unregistered models', () => {
-      const model = parseModel('unknown-provider/some-model');
-      const constraints = providerRegistry.resolve(model);
-      expect(constraints.provider).toBe('unknown');
+      const constraints = providerRegistry.resolve(
+        'unknown-provider/some-model',
+      );
+      expect(constraints.provider).toBe('unknown-provider');
       expect(constraints.unsupported).toEqual([]);
     });
 
@@ -135,8 +138,7 @@ describe('ProviderRegistry', () => {
         'openai.chat/gpt-4o-mini',
         'openai.responses/gpt-4o',
         'openai.responses/gpt-4o-mini',
-      ])('resolves %s to openaiConstraints', (modelId) => {
-        const model = parseModel(modelId);
+      ])('resolves %s to openaiConstraints', (model) => {
         const constraints = providerRegistry.resolve(model);
         expect(constraints.provider).toBe(openaiConstraints.provider);
         expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
@@ -147,7 +149,7 @@ describe('ProviderRegistry', () => {
     });
 
     describe('Azure OpenAI patterns', () => {
-      test.each<`${string}/${string}`>([
+      test.each<ModelIdentifier>([
         'azure/openai-gpt-4',
         'azure/my-openai-deployment',
         'azure/gpt-4-openai',
@@ -155,8 +157,7 @@ describe('ProviderRegistry', () => {
         'azure.chat/my-openai-model',
         'azure.responses/openai-deployment',
         'azure.responses/gpt-openai-4o',
-      ])('resolves %s to openaiConstraints', (modelId) => {
-        const model = parseModel(modelId);
+      ])('resolves %s to openaiConstraints', (model) => {
         const constraints = providerRegistry.resolve(model);
         expect(constraints.provider).toBe(openaiConstraints.provider);
         expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
@@ -170,10 +171,13 @@ describe('ProviderRegistry', () => {
         'azure/gpt-4-deployment',
         'azure.chat/mistral-model',
         'azure.responses/llama-deployment',
-      ])('does not resolve %s (no openai in model name)', (modelId) => {
-        const model = parseModel(modelId);
+      ])('does not resolve %s (no openai in model name)', (model) => {
         const constraints = providerRegistry.resolve(model);
-        expect(constraints.provider).toBe('unknown');
+        // Returns parsed provider name when no match found
+        const [provider, modelId] = (model as string).split('/');
+        expect(constraints.provider).toBe(provider);
+        expect(constraints.modelId).toBe(modelId);
+        expect(constraints.unsupported).toEqual([]);
       });
     });
   });

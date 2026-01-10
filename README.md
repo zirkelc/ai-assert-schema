@@ -94,13 +94,108 @@ test('schema should be compatible with the model', () => {
 });
 ```
 
+### Validate without Throwing
+
+Use `assertSchema.validate()` to check schema compatibility without throwing an error:
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+
+const result = assertSchema.validate({
+  schema: mySchema,
+  model: 'openai/gpt-4o',
+});
+
+if (!result.success) {
+  console.warn('Schema has compatibility issues:');
+  for (const issue of result.issues) {
+    console.warn(`  - ${issue.message}`);
+  }
+}
+```
+
+### Inline Constraints
+
+Pass constraints directly instead of relying on the provider registry:
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+import { openaiConstraints } from 'ai-assert-schema/constraints/openai';
+
+// Use OpenAI constraints with a custom or unknown provider
+assertSchema({
+  schema: mySchema,
+  model: 'my-custom-provider/model',
+  constraints: openaiConstraints,
+});
+```
+
 ## Providers
 
 Currently, only OpenAI is supported. More providers will be added in the future.
 
+### Register Custom Providers
+
+Register custom providers using `assertSchema.registry`:
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+
+// Register constraints for a custom provider
+assertSchema.registry.register({
+  // Matching 'my-provider/*' models
+  pattern: /^my-provider\/.+$/,
+  constraints: {
+    provider: 'my-provider',
+    unsupported: [
+      { feature: 'anyOf', message: 'anyOf is not supported' },
+      { feature: 'oneOf', message: 'oneOf is not supported' },
+    ],
+  },
+});
+
+// Now assertSchema will use these constraints for matching models
+assertSchema({
+  schema: mySchema,
+  model: 'my-provider/my-model',
+});
+```
+
+Patterns can be strings or regular expressions. The registry will always match exact strings first, then iterate over all regex patterns with later registrations taking precedence over earlier ones.
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+
+assertSchema.registry.register({
+  // Exact match for 'anthropic/claude-4'
+  pattern: 'anthropic/claude-4',
+  constraints: {},
+});
+
+assertSchema.registry.register({
+  // Matching all 'anthropic/*' models
+  pattern: /anthropic\/.+$/,
+  constraints: {},
+});
+
+// Matches exact string first
+assertSchema({
+  schema: mySchema,
+  model: 'anthropic/claude-4',
+});
+```
+
 ### OpenAI
 
-OpenAI's Structured Outputs have specific JSON Schema requirements. See the full constraint implementation in [`src/constraints/providers/openai.ts`](src/constraints/providers/openai.ts).
+The built-in registry resolves OpenAI models using the following patterns:
+
+- `'openai/*'`
+- `'openai.chat/*'`
+- `'openai.completions/*'`
+
+#### Constraints
+
+OpenAI's Structured Outputs have specific [JSON Schema constraints](https://platform.openai.com/docs/guides/structured-outputs). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
 
 **Unsupported JSON Schema features:**
 - `oneOf`
@@ -115,7 +210,7 @@ OpenAI's Structured Outputs have specific JSON Schema requirements. See the full
 - All properties must be required
 - Must use `additionalProperties: false`
 
-#### Examples
+##### Examples
 
 **Discriminated Union vs Union**
 
@@ -130,7 +225,7 @@ z.object({
 });
 ```
 
-```json
+```jsonc
 {
   "properties": {
     "animal": {
@@ -152,7 +247,7 @@ z.object({
 });
 ```
 
-```json
+```jsonc
 {
   "properties": {
     "animal": {
@@ -190,7 +285,7 @@ z.object({
 });
 ```
 
-```json
+```jsonc
 {
   "properties": {
     "name": { "type": ["string", "null"] }
@@ -199,15 +294,40 @@ z.object({
 }
 ```
 
+### Azure OpenAI
+
+Azure OpenAI uses the same constraints as OpenAI. The built-in registry resolves Azure models using the following patterns:
+
+- `'azure/openai*'`
+- `'azure/openai.chat*'`
+- `'azure/openai.completions*'`
+
+If your deployment names do not follow this pattern, you can register custom patterns using `assertSchema.registry.register()`:
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+// Import default OpenAI constraints
+import { openaiConstraints } from 'ai-assert-schema/constraints/openai';
+
+assertSchema.registry.register({
+  // Match your custom Azure deployment name
+  pattern: 'azure/my-deployment-name',
+  // Use OpenAI constraints
+  constraints: openaiConstraints,
+});
+```
+
 ## Contributing
 
 Contributions are welcome!
 
 - **Add new providers**: Submit a PR with constraints for other AI providers (Anthropic, Google, etc.)
 - **Fix constraints**: If you find incorrect constraints, please open an issue or PR
-- **Provider implementations**: See [`src/constraints/providers/`](src/constraints/providers/) for examples
+- **Provider implementations**: See [`src/constraints/openai/`](src/constraints/openai/) for examples
 
 ## API
+
+### `assertSchema(options)`
 
 ```typescript
 function assertSchema<SCHEMA extends SchemaInput>(
@@ -218,10 +338,29 @@ function assertSchema<SCHEMA extends SchemaInput>(
 **Parameters:**
 - `model` - Model identifier as `'provider/model-id'` string or `{ provider, modelId }` object
 - `schema` - Your schema (Zod, Standard Schema, or JSON Schema object)
+- `constraints` - (optional) Custom constraints to use instead of looking up from registry
 
 **Returns:** The input schema unchanged (for chaining)
 
 **Throws:** `SchemaAssertionError` when the schema contains unsupported features
+
+### `assertSchema.validate(options)`
+
+Same parameters as `assertSchema`, but returns a result object instead of throwing:
+
+```typescript
+type ValidationResult =
+  | { success: true; provider: string; modelId: string; jsonSchema: JSONSchema }
+  | { success: false; provider: string; modelId: string; jsonSchema: JSONSchema; issues: ValidationIssue[] }
+```
+
+### `assertSchema.registry`
+
+The provider registry for registering custom constraints:
+
+- `register({ pattern, constraints })` - Register a new provider pattern
+- `resolve(model)` - Resolve constraints for a model
+- `getAll()` - Get all registered patterns
 
 ## License
 

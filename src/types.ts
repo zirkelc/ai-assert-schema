@@ -254,6 +254,22 @@ export interface ValidateSchemaOptions<
    * @default 'output'
    */
   io?: JSONSchemaIO;
+  /**
+   * Custom constraints to use instead of looking up from registry.
+   * When provided, bypasses the provider registry lookup entirely.
+   *
+   * @example
+   * ```ts
+   * import { openaiConstraints } from 'ai-assert-schema/constraints/openai';
+   *
+   * assertSchema({
+   *   schema: mySchema,
+   *   model: 'custom-provider/model',
+   *   constraints: openaiConstraints,
+   * });
+   * ```
+   */
+  constraints?: ProviderConstraints;
 }
 
 /**

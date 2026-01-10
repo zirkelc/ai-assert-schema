@@ -1,66 +1,7 @@
 import { providerRegistry } from './constraints/registry.js';
-import { validateSchemaConstraints } from './constraints/validate.js';
+import { validateSchema } from './constraints/validate.js';
 import { SchemaAssertionError } from './errors.js';
-import { parseModel } from './model.js';
-import { extractJSONSchema } from './schema.js';
-import type {
-  AssertSchemaOptions,
-  SchemaInput,
-  ValidateSchemaOptions,
-  ValidationResult,
-} from './types.js';
-
-/**
- * Validate a schema against AI model constraints without throwing
- *
- * @example
- * ```ts
- * const result = validateSchema({
- *   schema: mySchema,
- *   model: 'openai/gpt-4o'
- * });
- *
- * if (!result.success) {
- *   console.warn('Schema has compatibility issues:');
- *   for (const issue of result.issues) {
- *     console.warn(`  - ${issue.message}`);
- *   }
- * }
- * ```
- */
-export function validateSchema<T extends SchemaInput>(
-  options: ValidateSchemaOptions<T>,
-): ValidationResult {
-  const { model, schema, target, io } = options;
-
-  // Parse model identifier into object
-  const parsedModel = parseModel(model);
-
-  // Get constraints for provider/model
-  const constraints = providerRegistry.resolve(parsedModel);
-
-  // Extract JSON Schema (priority: options.target > constraints.jsonSchemaTarget > default)
-  const jsonSchemaTarget = target ?? constraints.jsonSchemaTarget;
-  const jsonSchema = extractJSONSchema(schema, jsonSchemaTarget, io);
-
-  // Validate schema against constraints
-  const issues = validateSchemaConstraints(jsonSchema, constraints);
-
-  return issues.length === 0
-    ? {
-        success: true,
-        jsonSchema,
-        modelId: constraints.modelId,
-        provider: constraints.provider,
-      }
-    : {
-        success: false,
-        issues,
-        jsonSchema,
-        modelId: constraints.modelId,
-        provider: constraints.provider,
-      };
-}
+import type { AssertSchemaOptions, SchemaInput } from './types.js';
 
 /**
  * Assert a schema is valid for an AI model, throwing if invalid
@@ -145,3 +86,52 @@ export function assertSchema<SCHEMA extends SchemaInput>(
 
   return options.schema;
 }
+/**
+ * Registry for provider constraints.
+ * Use this to register custom providers or override existing ones.
+ *
+ * @example
+ * ```ts
+ * import { assertSchema } from 'ai-assert-schema';
+ *
+ * // Register constraints for a custom provider
+ * assertSchema.registry.register({
+ *   pattern: /^my-provider\/.+$/,
+ *   constraints: {
+ *     provider: 'my-provider',
+ *     unsupported: [
+ *       { feature: 'anyOf', message: 'anyOf is not supported' },
+ *     ],
+ *   },
+ * });
+ *
+ * // Now assertSchema will use these constraints
+ * assertSchema({
+ *   schema: mySchema,
+ *   model: 'my-provider/my-model',
+ * });
+ * ```
+ */
+assertSchema.registry = providerRegistry;
+
+/**
+ * Validate a schema against AI model constraints without throwing.
+ *
+ * @example
+ * ```ts
+ * import { assertSchema } from 'ai-assert-schema';
+ *
+ * const result = assertSchema.validate({
+ *   schema: mySchema,
+ *   model: 'openai/gpt-4o'
+ * });
+ *
+ * if (!result.success) {
+ *   console.warn('Schema has compatibility issues:');
+ *   for (const issue of result.issues) {
+ *     console.warn(`  - ${issue.message}`);
+ *   }
+ * }
+ * ```
+ */
+assertSchema.validate = validateSchema;

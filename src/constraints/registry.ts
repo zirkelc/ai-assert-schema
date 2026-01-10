@@ -1,46 +1,79 @@
+import { parseModel } from '../model.js';
 import type {
-  ParsedModel,
+  ModelIdentifier,
   ProviderConstraints,
   ProviderPattern,
   ProviderRegistryEntry,
   ResolvedConstraints,
 } from '../types.js';
-import { openaiConstraints } from './providers/openai.js';
+import { openaiConstraints } from './openai/openai.js';
 
 /**
- * Registry for provider patterns and their constraints
+ * Registry for provider patterns and their constraints.
+ *
+ * Patterns can be:
+ * - **Exact strings**: `'openai/gpt-4o'` - O(1) lookup, always takes precedence over regex
+ * - **Regular expressions**: `/^openai\/.+$/` - Matched in order, last match wins
+ *
+ * When resolving a model, exact string matches are checked first. If no exact match
+ * is found, regex patterns are tested in reverse registration order (last registered wins).
  */
 export class ProviderRegistry {
   private registry = new Map<ProviderPattern, ProviderConstraints>();
 
   /**
-   * Register a new provider pattern
+   * Register a new provider pattern.
    *
-   * - String patterns: exact match (O(1) lookup, always wins over regex)
-   * - RegExp patterns: last match wins (register specific patterns after general ones)
+   * @param entry - The pattern and constraints to register
+   *
+   * @example
+   * ```ts
+   * // Exact string match (highest priority)
+   * registry.register({
+   *   pattern: 'openai/gpt-4o',
+   *   constraints: gpt4oConstraints,
+   * });
+   *
+   * // Regex pattern (last match wins among regex patterns)
+   * registry.register({
+   *   pattern: /^openai\/.+$/,
+   *   constraints: openaiConstraints,
+   * });
+   * ```
    */
   register(entry: ProviderRegistryEntry): void {
     this.registry.set(entry.pattern, entry.constraints);
   }
 
   /**
-   * Resolve constraints for a parsed model
+   * Resolve constraints for a model.
    *
    * Matching order:
    * 1. Exact string match (always wins)
    * 2. Regex patterns (last match wins)
    *
-   * @param model - Parsed model from parseModel()
+   * @param model - Model identifier as `'provider/model-id'` string or `{ provider, modelId }` object
+   * @returns Resolved constraints for the model
+   *
+   * @example
+   * ```ts
+   * // String format
+   * const constraints = registry.resolve('openai/gpt-4o');
+   *
+   * // Object format
+   * const constraints = registry.resolve({ provider: 'openai', modelId: 'gpt-4o' });
+   * ```
    */
-  resolve(model: ParsedModel): ResolvedConstraints {
-    const modelIdentifier = `${model.provider}/${model.modelId}`;
+  resolve(model: ModelIdentifier): ResolvedConstraints {
+    const parsedModel = parseModel(model);
+    const modelIdentifier = `${parsedModel.provider}/${parsedModel.modelId}`;
 
     // Try exact string match first
     const exactMatch = this.registry.get(modelIdentifier);
     if (exactMatch) {
       return {
         provider: exactMatch.provider,
-        modelId: model.modelId,
+        modelId: parsedModel.modelId,
         unsupported: exactMatch.unsupported,
         customValidators: exactMatch.customValidators ?? [],
         jsonSchemaTarget: exactMatch.jsonSchemaTarget,
@@ -53,7 +86,7 @@ export class ProviderRegistry {
       if (pattern instanceof RegExp && pattern.test(modelIdentifier)) {
         return {
           provider: constraints.provider,
-          modelId: model.modelId,
+          modelId: parsedModel.modelId,
           unsupported: constraints.unsupported,
           customValidators: constraints.customValidators ?? [],
           jsonSchemaTarget: constraints.jsonSchemaTarget,
@@ -67,8 +100,8 @@ export class ProviderRegistry {
     );
 
     return {
-      provider: 'unknown',
-      modelId: model.modelId,
+      provider: parsedModel.provider,
+      modelId: parsedModel.modelId,
       unsupported: [],
       customValidators: [],
     };

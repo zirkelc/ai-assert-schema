@@ -1,10 +1,73 @@
+import { parseModel } from '../model.js';
+import { extractJSONSchema } from '../schema.js';
 import type {
   FeatureContext,
   JSONSchema,
   ResolvedConstraints,
   SchemaFeature,
+  SchemaInput,
+  ValidateSchemaOptions,
   ValidationIssue,
+  ValidationResult,
 } from '../types.js';
+import { providerRegistry } from './registry.js';
+
+/**
+ * Validate a schema against AI model constraints without throwing
+ *
+ * @example
+ * ```ts
+ * const result = validateSchema({
+ *   schema: mySchema,
+ *   model: 'openai/gpt-4o'
+ * });
+ *
+ * if (!result.success) {
+ *   console.warn('Schema has compatibility issues:');
+ *   for (const issue of result.issues) {
+ *     console.warn(`  - ${issue.message}`);
+ *   }
+ * }
+ * ```
+ */
+export function validateSchema<T extends SchemaInput>(
+  options: ValidateSchemaOptions<T>,
+): ValidationResult {
+  const { model, schema, target, io, constraints: customConstraints } = options;
+
+  // Get constraints: use custom constraints if provided, otherwise resolve from registry
+  const constraints: ResolvedConstraints = customConstraints
+    ? {
+        provider: customConstraints.provider,
+        modelId: parseModel(model).modelId,
+        unsupported: customConstraints.unsupported,
+        customValidators: customConstraints.customValidators ?? [],
+        jsonSchemaTarget: customConstraints.jsonSchemaTarget,
+      }
+    : providerRegistry.resolve(model);
+
+  // Extract JSON Schema (priority: options.target > constraints.jsonSchemaTarget > default)
+  const jsonSchemaTarget = target ?? constraints.jsonSchemaTarget;
+  const jsonSchema = extractJSONSchema(schema, jsonSchemaTarget, io);
+
+  // Validate schema against constraints
+  const issues = validateSchemaConstraints(jsonSchema, constraints);
+
+  return issues.length === 0
+    ? {
+        success: true,
+        jsonSchema,
+        modelId: constraints.modelId,
+        provider: constraints.provider,
+      }
+    : {
+        success: false,
+        issues,
+        jsonSchema,
+        modelId: constraints.modelId,
+        provider: constraints.provider,
+      };
+}
 
 interface TraversalContext {
   path: string[];
