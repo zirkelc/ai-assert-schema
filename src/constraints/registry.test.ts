@@ -1,31 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { parseModel } from '../model.js';
+import type { ModelIdentifier } from '../types.js';
+import { openaiConstraints } from './providers/openai.js';
 import { providerRegistry } from './registry.js';
 
 describe('ProviderRegistry', () => {
-  describe('resolve', () => {
-    test('resolves constraints for string model identifier', () => {
-      const model = parseModel('openai/gpt-4o');
-      const constraints = providerRegistry.resolve(model);
-      expect(constraints.modelId).toBe('gpt-4o');
-      expect(constraints.provider).toBe('openai');
-    });
-
-    test('resolves constraints for model object', () => {
-      const model = parseModel({ provider: 'openai', modelId: 'gpt-4o' });
-      const constraints = providerRegistry.resolve(model);
-      expect(constraints.modelId).toBe('gpt-4o');
-      expect(constraints.provider).toBe('openai');
-    });
-
-    test('returns unknown provider for unregistered models', () => {
-      const model = parseModel('unknown-provider/some-model');
-      const constraints = providerRegistry.resolve(model);
-      expect(constraints.provider).toBe('unknown');
-      expect(constraints.unsupported).toEqual([]);
-    });
-  });
-
   describe('register', () => {
     test('registers custom provider with regex pattern', () => {
       providerRegistry.register({
@@ -123,6 +102,79 @@ describe('ProviderRegistry', () => {
         (p) => p.pattern instanceof RegExp && p.pattern.test('openai/gpt-4o'),
       );
       expect(hasOpenAI).toBe(true);
+    });
+  });
+
+  describe('resolve', () => {
+    test('resolves constraints for string model identifier', () => {
+      const model = parseModel('openai/gpt-4o');
+      const constraints = providerRegistry.resolve(model);
+      expect(constraints.modelId).toBe('gpt-4o');
+      expect(constraints.provider).toBe('openai');
+    });
+
+    test('resolves constraints for model object', () => {
+      const model = parseModel({ provider: 'openai', modelId: 'gpt-4o' });
+      const constraints = providerRegistry.resolve(model);
+      expect(constraints.modelId).toBe('gpt-4o');
+      expect(constraints.provider).toBe('openai');
+    });
+
+    test('returns unknown provider for unregistered models', () => {
+      const model = parseModel('unknown-provider/some-model');
+      const constraints = providerRegistry.resolve(model);
+      expect(constraints.provider).toBe('unknown');
+      expect(constraints.unsupported).toEqual([]);
+    });
+
+    describe('OpenAI patterns', () => {
+      test.each<ModelIdentifier>([
+        'openai/gpt-5',
+        'openai/gpt-4o',
+        'openai.chat/gpt-4o',
+        'openai.chat/gpt-4o-mini',
+        'openai.responses/gpt-4o',
+        'openai.responses/gpt-4o-mini',
+      ])('resolves %s to openaiConstraints', (modelId) => {
+        const model = parseModel(modelId);
+        const constraints = providerRegistry.resolve(model);
+        expect(constraints.provider).toBe(openaiConstraints.provider);
+        expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
+        expect(constraints.customValidators).toEqual(
+          openaiConstraints.customValidators,
+        );
+      });
+    });
+
+    describe('Azure OpenAI patterns', () => {
+      test.each<`${string}/${string}`>([
+        'azure/openai-gpt-4',
+        'azure/my-openai-deployment',
+        'azure/gpt-4-openai',
+        'azure.chat/openai-gpt-4o',
+        'azure.chat/my-openai-model',
+        'azure.responses/openai-deployment',
+        'azure.responses/gpt-openai-4o',
+      ])('resolves %s to openaiConstraints', (modelId) => {
+        const model = parseModel(modelId);
+        const constraints = providerRegistry.resolve(model);
+        expect(constraints.provider).toBe(openaiConstraints.provider);
+        expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
+        expect(constraints.customValidators).toEqual(
+          openaiConstraints.customValidators,
+        );
+      });
+
+      test.each<ModelIdentifier>([
+        'azure/some-other-model',
+        'azure/gpt-4-deployment',
+        'azure.chat/mistral-model',
+        'azure.responses/llama-deployment',
+      ])('does not resolve %s (no openai in model name)', (modelId) => {
+        const model = parseModel(modelId);
+        const constraints = providerRegistry.resolve(model);
+        expect(constraints.provider).toBe('unknown');
+      });
     });
   });
 });

@@ -93,15 +93,27 @@ export class ProviderRegistry {
 export const providerRegistry = new ProviderRegistry();
 
 /**
- * OpenAI (and Azure OpenAI)
+ * OpenAI
  * Matches:
  *  - openai/*
  *  - openai.chat/*
  *  - openai.responses/*
- *  - azure/*
- *  - azure-openai/*
  */
 providerRegistry.register({
-  pattern: /^(openai|openai\.chat|openai\.responses|azure|azure-openai)\/.+$/,
+  pattern: /^(openai|openai\.chat|openai\.responses)\/.+$/,
+  constraints: openaiConstraints,
+});
+
+// TODO consider adding patterns like azure/*gpt*, etc.
+
+/**
+ * Azure OpenAI
+ * Matches:
+ *  - azure/*openai*
+ *  - azure.chat/*openai*
+ *  - azure.responses/*openai*
+ */
+providerRegistry.register({
+  pattern: /^(azure|azure\.chat|azure\.responses)\/.*openai.*$/,
   constraints: openaiConstraints,
 });
