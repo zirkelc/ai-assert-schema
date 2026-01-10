@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/zirkelc/ai-assert-schema/compare/v1.0.2...v1.0.3) (2026-01-10)
+
+
+### Miscellaneous Chores
+
+* release 1.0.3 ([e8519a7](https://github.com/zirkelc/ai-assert-schema/commit/e8519a700caee29ba7535adb48a6e7cb6cc78e2c))
+
 ## 1.0.2 (2026-01-10)
 
 
