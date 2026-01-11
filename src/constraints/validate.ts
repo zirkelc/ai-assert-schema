@@ -6,6 +6,7 @@ import type {
   ResolvedConstraints,
   SchemaFeature,
   SchemaInput,
+  SimpleConstraintRule,
   ValidateSchemaOptions,
   ValidationIssue,
   ValidationResult,
@@ -234,7 +235,15 @@ function traverseSchema(schema: JSONSchema, ctx: TraversalContext): void {
     }
   }
 
-  // Run custom validators
+  // Run validate functions from constraint rules (CustomConstraintRule)
+  for (const rule of ctx.constraints.unsupported) {
+    if ('validate' in rule) {
+      const issues = rule.validate(schema, ctx.path, ctx.isRoot);
+      ctx.issues.push(...issues);
+    }
+  }
+
+  // Run custom validators for backwards compatibility
   ctx.constraints.customValidators.forEach((validator) => {
     const issues = validator.validate(schema, ctx.path, ctx.isRoot);
     ctx.issues.push(...issues);
@@ -248,10 +257,46 @@ function isFeatureUnsupported(
 ): boolean {
   return ctx.constraints.unsupported.some((rule) => {
     if (rule.feature !== feature) return false;
+    // Skip CustomConstraintRule - those are handled via validate function
+    if ('validate' in rule) return false;
+    // Skip rules that have allowedValues - those are handled separately
+    if (rule.allowedValues && rule.allowedValues.length > 0) return false;
     if (!rule.context || rule.context === 'any') return true;
     if (currentContext === undefined) return true;
     return rule.context === currentContext;
   });
+}
+
+/**
+ * Check if a feature value violates an allowedValues constraint.
+ * Returns the rule if the value is NOT in the allowed list, undefined otherwise.
+ */
+function getViolatedAllowedValuesRule(
+  feature: SchemaFeature,
+  value: unknown,
+  ctx: TraversalContext,
+  currentContext?: FeatureContext,
+): { rule: SimpleConstraintRule; value: unknown } | undefined {
+  for (const rule of ctx.constraints.unsupported) {
+    if (rule.feature !== feature) continue;
+    // Skip CustomConstraintRule - those are handled via validate function
+    if ('validate' in rule) continue;
+    if (!rule.allowedValues || rule.allowedValues.length === 0) continue;
+
+    // Check context
+    if (rule.context && rule.context !== 'any') {
+      if (currentContext !== undefined && rule.context !== currentContext)
+        continue;
+    }
+
+    // Check if value is in allowed list
+    if (
+      !rule.allowedValues.includes(value as string | number | boolean | null)
+    ) {
+      return { rule, value };
+    }
+  }
+  return undefined;
 }
 
 function getFeatureMessage(
@@ -260,7 +305,11 @@ function getFeatureMessage(
   defaultMessage: string,
 ): string {
   const rule = ctx.constraints.unsupported.find((r) => r.feature === feature);
-  return rule?.message || defaultMessage;
+  // Only SimpleConstraintRule has message property
+  if (rule && 'message' in rule && rule.message) {
+    return rule.message;
+  }
+  return defaultMessage;
 }
 
 function checkCompositionKeywords(
@@ -446,6 +495,22 @@ function checkObjectConstraints(
       ),
     });
   }
+
+  // Check additionalProperties with allowedValues
+  const additionalPropsViolation = getViolatedAllowedValuesRule(
+    'additionalProperties',
+    schema.additionalProperties,
+    ctx,
+  );
+  if (additionalPropsViolation) {
+    ctx.issues.push({
+      path: [...ctx.path],
+      feature: 'additionalProperties',
+      message:
+        additionalPropsViolation.rule.message ||
+        `additionalProperties value ${JSON.stringify(additionalPropsViolation.value)} is not allowed`,
+    });
+  }
 }
 
 function checkArrayConstraints(
@@ -484,12 +549,35 @@ function checkArrayConstraints(
     });
   }
 
-  if (schema.minItems !== undefined && isFeatureUnsupported('minItems', ctx)) {
-    ctx.issues.push({
-      path: [...ctx.path],
-      feature: 'minItems',
-      message: getFeatureMessage('minItems', ctx, 'minItems is not supported'),
-    });
+  if (schema.minItems !== undefined) {
+    // Check if minItems is completely unsupported
+    if (isFeatureUnsupported('minItems', ctx)) {
+      ctx.issues.push({
+        path: [...ctx.path],
+        feature: 'minItems',
+        message: getFeatureMessage(
+          'minItems',
+          ctx,
+          'minItems is not supported',
+        ),
+      });
+    } else {
+      // Check if minItems value violates allowedValues constraint
+      const minItemsViolation = getViolatedAllowedValuesRule(
+        'minItems',
+        schema.minItems,
+        ctx,
+      );
+      if (minItemsViolation) {
+        ctx.issues.push({
+          path: [...ctx.path],
+          feature: 'minItems',
+          message:
+            minItemsViolation.rule.message ||
+            `minItems value ${minItemsViolation.value} is not allowed`,
+        });
+      }
+    }
   }
 
   if (schema.maxItems !== undefined && isFeatureUnsupported('maxItems', ctx)) {

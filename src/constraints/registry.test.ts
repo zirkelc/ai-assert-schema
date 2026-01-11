@@ -142,9 +142,6 @@ describe('ProviderRegistry', () => {
         const constraints = providerRegistry.resolve(model);
         expect(constraints.provider).toBe(openaiConstraints.provider);
         expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
-        expect(constraints.customValidators).toEqual(
-          openaiConstraints.customValidators,
-        );
       });
     });
 
@@ -161,9 +158,6 @@ describe('ProviderRegistry', () => {
         const constraints = providerRegistry.resolve(model);
         expect(constraints.provider).toBe(openaiConstraints.provider);
         expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
-        expect(constraints.customValidators).toEqual(
-          openaiConstraints.customValidators,
-        );
       });
 
       test.each<ModelIdentifier>([

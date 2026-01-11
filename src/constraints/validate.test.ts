@@ -118,9 +118,7 @@ describe('validateSchema', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some(
-            (i) => i.feature === 'additionalPropertiesNotFalse',
-          ),
+          result.issues.some((i) => i.feature === 'additionalProperties'),
         ).toBe(true);
       }
     });

@@ -132,7 +132,7 @@ assertSchema({
 
 ## Providers
 
-Currently, only OpenAI is supported. More providers will be added in the future.
+Currently supported providers: OpenAI, Anthropic.
 
 ### Register Custom Providers
 
@@ -314,6 +314,41 @@ assertSchema.registry.register({
   pattern: 'azure/my-deployment-name',
   // Use OpenAI constraints
   constraints: openaiConstraints,
+});
+```
+
+### Anthropic
+
+The built-in registry resolves Anthropic models using the following patterns:
+
+- `'anthropic/*'`
+- `'anthropic.messages/*'`
+
+#### Constraints
+
+Anthropic's Structured Outputs have specific [JSON Schema constraints](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations). See the full constraint implementation in [`src/constraints/anthropic/anthropic.ts`](src/constraints/anthropic/anthropic.ts).
+
+**Unsupported JSON Schema features:**
+- Recursive schemas
+- Numerical constraints (`minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`)
+- String constraints (`minLength`, `maxLength`)
+- Array constraints (`maxItems`, `uniqueItems`, `contains`, `minItems` > 1)
+
+**Required constraints:**
+- Must use `additionalProperties: false`
+
+##### Import Anthropic Constraints
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+// Import Anthropic constraints
+import { anthropicConstraints } from 'ai-assert-schema/constraints/anthropic';
+
+assertSchema.registry.register({
+  // Match your custom provider
+  pattern: 'my-provider/claude-compatible',
+  // Use Anthropic constraints
+  constraints: anthropicConstraints,
 });
 ```
 

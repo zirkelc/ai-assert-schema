@@ -6,6 +6,7 @@ import type {
   ProviderRegistryEntry,
   ResolvedConstraints,
 } from '../types.js';
+import { anthropicConstraints } from './anthropic/anthropic.js';
 import { openaiConstraints } from './openai/openai.js';
 
 /**
@@ -149,4 +150,15 @@ providerRegistry.register({
 providerRegistry.register({
   pattern: /^(azure|azure\.chat|azure\.responses)\/.*openai.*$/,
   constraints: openaiConstraints,
+});
+
+/**
+ * Anthropic
+ * Matches:
+ *  - anthropic/*
+ *  - anthropic.messages/*
+ */
+providerRegistry.register({
+  pattern: /^(anthropic|anthropic\.messages)\/.+$/,
+  constraints: anthropicConstraints,
 });

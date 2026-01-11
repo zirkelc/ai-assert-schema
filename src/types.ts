@@ -102,7 +102,7 @@ export type SchemaFeature =
   | '$ref'
   | 'recursive'
   | 'optionalProperties'
-  | 'additionalPropertiesNotFalse';
+  | 'enum';
 
 /**
  * Context for where a feature is used
@@ -110,13 +110,47 @@ export type SchemaFeature =
 export type FeatureContext = 'root' | 'nested' | 'any';
 
 /**
- * Constraint rule for a specific feature
+ * Base properties shared by all constraint rules
  */
-export interface ConstraintRule {
+interface ConstraintRuleBase {
   feature: SchemaFeature;
   context?: FeatureContext;
-  message?: string;
 }
+
+/**
+ * Simple constraint rule - blocks a feature entirely or with allowedValues
+ */
+export interface SimpleConstraintRule extends ConstraintRuleBase {
+  message?: string;
+  /**
+   * If specified, the feature is only invalid when its value is NOT in this list.
+   * If undefined/empty, any use of the feature is invalid.
+   *
+   * @example
+   * // additionalProperties must be false
+   * { feature: 'additionalProperties', allowedValues: [false] }
+   *
+   * // minItems only allows 0 or 1
+   * { feature: 'minItems', allowedValues: [0, 1] }
+   */
+  allowedValues?: (string | number | boolean | null)[];
+}
+
+/**
+ * Custom constraint rule - uses a validate function for complex logic
+ */
+export interface CustomConstraintRule extends ConstraintRuleBase {
+  validate: (
+    schema: JSONSchema,
+    path: string[],
+    isRoot: boolean,
+  ) => ValidationIssue[];
+}
+
+/**
+ * Constraint rule - either simple (with message/allowedValues) or custom (with validate)
+ */
+export type ConstraintRule = SimpleConstraintRule | CustomConstraintRule;
 
 /**
  * Issue found during validation

@@ -299,9 +299,7 @@ describe('OpenAI constraints', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(
-            result.issues.some(
-              (i) => i.feature === 'additionalPropertiesNotFalse',
-            ),
+            result.issues.some((i) => i.feature === 'additionalProperties'),
           ).toBe(true);
         }
       });
@@ -315,9 +313,7 @@ describe('OpenAI constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some(
-            (i) => i.feature === 'additionalPropertiesNotFalse',
-          ),
+          result.issues.some((i) => i.feature === 'additionalProperties'),
         ).toBe(true);
       }
     });
@@ -388,6 +384,72 @@ describe('OpenAI constraints', () => {
       if (!result.success) {
         expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
+    });
+  });
+
+  describe('fails on enum with complex types', () => {
+    test('fails for enum with object values', () => {
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          option: {
+            enum: [{ type: 'a' }, { type: 'b' }],
+          },
+        },
+        required: ['option'],
+        additionalProperties: false,
+      };
+
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+      }
+    });
+
+    test('fails for enum with array values', () => {
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          option: {
+            enum: [
+              ['a', 'b'],
+              ['c', 'd'],
+            ],
+          },
+        },
+        required: ['option'],
+        additionalProperties: false,
+      };
+
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+      }
+    });
+
+    test('passes for enum with primitive values', () => {
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          status: { enum: ['active', 'inactive', null, 42, true] },
+        },
+        required: ['status'],
+        additionalProperties: false,
+      };
+
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+      expect(result.success).toBe(true);
     });
   });
 });

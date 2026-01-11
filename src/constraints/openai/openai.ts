@@ -1,55 +1,4 @@
-import type {
-  CustomValidator,
-  ProviderConstraints,
-  ValidationIssue,
-} from '../../types.js';
-
-/**
- * Custom validator to check that all properties are required
- */
-const allPropertiesRequiredValidator: CustomValidator = {
-  name: 'allPropertiesRequired',
-  validate: (schema, path, isRoot): ValidationIssue[] => {
-    const issues: ValidationIssue[] = [];
-
-    if (schema.properties) {
-      const props = Object.keys(schema.properties);
-      const required = schema.required || [];
-      const optional = props.filter((p) => !required.includes(p));
-
-      if (optional.length > 0) {
-        issues.push({
-          path: [...path],
-          feature: 'optionalProperties',
-          message: `All properties must be required. Optional properties found: ${optional.join(', ')}`,
-        });
-      }
-    }
-
-    return issues;
-  },
-};
-
-/**
- * Custom validator to check additionalProperties is false
- */
-const additionalPropertiesFalseValidator: CustomValidator = {
-  name: 'additionalPropertiesFalse',
-  validate: (schema, path, isRoot): ValidationIssue[] => {
-    if (schema.type === 'object' || schema.properties) {
-      if (schema.additionalProperties !== false) {
-        return [
-          {
-            path: [...path],
-            feature: 'additionalPropertiesNotFalse',
-            message: 'additionalProperties must be explicitly set to false',
-          },
-        ];
-      }
-    }
-    return [];
-  },
-};
+import type { ProviderConstraints, ValidationIssue } from '../../types.js';
 
 /**
  * OpenAI constraints
@@ -62,6 +11,7 @@ const additionalPropertiesFalseValidator: CustomValidator = {
  * - NOT supported anywhere: oneOf, allOf, not, if/then/else, dependentRequired, dependentSchemas
  * - Required: All properties must be in `required` array
  * - Required: `additionalProperties: false`
+ * - Enum: only primitive values (strings, numbers, booleans, null) - no complex types (objects, arrays)
  */
 export const openaiConstraints: ProviderConstraints = {
   provider: 'openai',
@@ -90,9 +40,52 @@ export const openaiConstraints: ProviderConstraints = {
       feature: 'patternProperties',
       message: 'patternProperties is not supported',
     },
-  ],
-  customValidators: [
-    allPropertiesRequiredValidator,
-    additionalPropertiesFalseValidator,
+    {
+      feature: 'additionalProperties',
+      allowedValues: [false],
+      message: 'additionalProperties must be explicitly set to false',
+    },
+    {
+      feature: 'optionalProperties',
+      validate: (schema, path): ValidationIssue[] => {
+        const issues: ValidationIssue[] = [];
+
+        if (schema.properties) {
+          const props = Object.keys(schema.properties);
+          const required = schema.required || [];
+          const optional = props.filter((p) => !required.includes(p));
+
+          if (optional.length > 0) {
+            issues.push({
+              path: [...path],
+              feature: 'optionalProperties',
+              message: `All properties must be required. Optional properties found: ${optional.join(', ')}`,
+            });
+          }
+        }
+
+        return issues;
+      },
+    },
+    {
+      feature: 'enum',
+      validate: (schema, path): ValidationIssue[] => {
+        const issues: ValidationIssue[] = [];
+        if (schema.enum && Array.isArray(schema.enum)) {
+          const hasComplexTypes = schema.enum.some(
+            (val) => val !== null && typeof val === 'object',
+          );
+          if (hasComplexTypes) {
+            issues.push({
+              path: [...path],
+              feature: 'enum',
+              message:
+                'Enum values must be strings, numbers, booleans, or null - complex types are not supported',
+            });
+          }
+        }
+        return issues;
+      },
+    },
   ],
 };
