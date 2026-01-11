@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.1.0...v1.2.0) (2026-01-11)
+
+
+### Features
+
+* add Anthropic constraints ([9299383](https://github.com/zirkelc/ai-assert-schema/commit/9299383e3a7396d44d06472f2007f5539db9e90a))
+
 ## [1.1.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.0.3...v1.1.0) (2026-01-10)
 
 
