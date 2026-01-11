@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.0.3...v1.1.0) (2026-01-10)
+
+
+### Features
+
+* expose registry and validate ([b7d6bde](https://github.com/zirkelc/ai-assert-schema/commit/b7d6bde3ab963778a1eccd9cf00437e2af56fcc3))
+
 ## [1.0.3](https://github.com/zirkelc/ai-assert-schema/compare/v1.0.2...v1.0.3) (2026-01-10)
 
 
