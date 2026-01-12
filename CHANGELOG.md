@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.2.0...v1.3.0) (2026-01-12)
+
+
+### Features
+
+* register provider alias ([d339a31](https://github.com/zirkelc/ai-assert-schema/commit/d339a31d0555c4fba768bf8d845cd2835ec1e6ec))
+
 ## [1.2.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.1.0...v1.2.0) (2026-01-11)
 
 
