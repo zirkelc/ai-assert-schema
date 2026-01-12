@@ -161,6 +161,28 @@ assertSchema({
 });
 ```
 
+#### Provider Aliases
+
+You can also register aliases that reference built-in providers (`'openai'` or `'anthropic'`) instead of providing full constraints:
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+
+// Register an alias that uses OpenAI constraints
+assertSchema.registry.register({
+  pattern: /^my-openai-compatible\/.+$/,
+  provider: 'openai',  // Uses built-in OpenAI constraints
+});
+
+// Register an alias that uses Anthropic constraints
+assertSchema.registry.register({
+  pattern: /^my-anthropic-compatible\/.+$/,
+  provider: 'anthropic',  // Uses built-in Anthropic constraints
+});
+```
+
+#### Pattern Matching
+
 Patterns can be strings or regular expressions. The registry will always match exact strings first, then iterate over all regex patterns with later registrations taking precedence over earlier ones.
 
 ```typescript
@@ -191,7 +213,7 @@ The built-in registry resolves OpenAI models using the following patterns:
 
 - `'openai/*'`
 - `'openai.chat/*'`
-- `'openai.completions/*'`
+- `'openai.responses/*'`
 
 #### Constraints
 
@@ -298,22 +320,20 @@ z.object({
 
 Azure OpenAI uses the same constraints as OpenAI. The built-in registry resolves Azure models using the following patterns:
 
-- `'azure/openai*'`
-- `'azure/openai.chat*'`
-- `'azure/openai.completions*'`
+- `'azure/*openai*'`
+- `'azure.chat/*openai*'`
+- `'azure.responses/*openai*'`
 
 If your deployment names do not follow this pattern, you can register custom patterns using `assertSchema.registry.register()`:
 
 ```typescript
 import { assertSchema } from 'ai-assert-schema';
-// Import default OpenAI constraints
-import { openaiConstraints } from 'ai-assert-schema/constraints/openai';
 
 assertSchema.registry.register({
   // Match your custom Azure deployment name
   pattern: 'azure/my-deployment-name',
-  // Use OpenAI constraints
-  constraints: openaiConstraints,
+  // Use built-in OpenAI constraints
+  provider: 'openai',
 });
 ```
 
@@ -337,18 +357,16 @@ Anthropic's Structured Outputs have specific [JSON Schema constraints](https://p
 **Required constraints:**
 - Must use `additionalProperties: false`
 
-##### Import Anthropic Constraints
+##### Register Anthropic-Compatible Providers
 
 ```typescript
 import { assertSchema } from 'ai-assert-schema';
-// Import Anthropic constraints
-import { anthropicConstraints } from 'ai-assert-schema/constraints/anthropic';
 
 assertSchema.registry.register({
   // Match your custom provider
   pattern: 'my-provider/claude-compatible',
-  // Use Anthropic constraints
-  constraints: anthropicConstraints,
+  // Use built-in Anthropic constraints
+  provider: 'anthropic',
 });
 ```
 
@@ -393,9 +411,10 @@ type ValidationResult =
 
 The provider registry for registering custom constraints:
 
-- `register({ pattern, constraints })` - Register a new provider pattern
+- `register({ pattern, provider })` - Register a pattern using built-in provider constraints (`'openai'` or `'anthropic'`)
+- `register({ pattern, constraints })` - Register a pattern with custom constraints
 - `resolve(model)` - Resolve constraints for a model
-- `getAll()` - Get all registered patterns
+- `getAll()` - Get all registered patterns with their resolved constraints
 
 ## License
 

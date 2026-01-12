@@ -1,13 +1,23 @@
 import { parseModel } from '../model.js';
 import type {
+  BuiltInProvider,
   ModelIdentifier,
   ProviderConstraints,
+  ProviderConstraintsEntry,
   ProviderPattern,
   ProviderRegistryEntry,
   ResolvedConstraints,
 } from '../types.js';
 import { anthropicConstraints } from './anthropic/anthropic.js';
 import { openaiConstraints } from './openai/openai.js';
+
+/**
+ * Built-in provider constraints map
+ */
+const builtInProviders: Record<BuiltInProvider, ProviderConstraints> = {
+  openai: openaiConstraints,
+  anthropic: anthropicConstraints,
+};
 
 /**
  * Registry for provider patterns and their constraints.
@@ -29,21 +39,35 @@ export class ProviderRegistry {
    *
    * @example
    * ```ts
-   * // Exact string match (highest priority)
+   * // Reference built-in provider by name
    * registry.register({
-   *   pattern: 'openai/gpt-4o',
-   *   constraints: gpt4oConstraints,
+   *   pattern: /^azure\/.*openai.*$/,
+   *   provider: 'openai',
    * });
    *
-   * // Regex pattern (last match wins among regex patterns)
+   * // Or provide custom constraints
    * registry.register({
-   *   pattern: /^openai\/.+$/,
-   *   constraints: openaiConstraints,
+   *   pattern: /^custom\/.+$/,
+   *   constraints: customConstraints,
    * });
    * ```
    */
   register(entry: ProviderRegistryEntry): void {
-    this.registry.set(entry.pattern, entry.constraints);
+    let constraints: ProviderConstraints;
+
+    if ('provider' in entry) {
+      const providerConstraints = builtInProviders[entry.provider];
+      if (!providerConstraints) {
+        throw new Error(
+          `Unknown provider "${entry.provider}". Available providers: ${Object.keys(builtInProviders).join(', ')}`,
+        );
+      }
+      constraints = providerConstraints;
+    } else {
+      constraints = entry.constraints;
+    }
+
+    this.registry.set(entry.pattern, constraints);
   }
 
   /**
@@ -109,9 +133,9 @@ export class ProviderRegistry {
   }
 
   /**
-   * Get all registered patterns
+   * Get all registered patterns with their resolved constraints
    */
-  getAll(): ProviderRegistryEntry[] {
+  getAll(): ProviderConstraintsEntry[] {
     return Array.from(this.registry.entries()).map(
       ([pattern, constraints]) => ({
         pattern,
@@ -135,10 +159,8 @@ export const providerRegistry = new ProviderRegistry();
  */
 providerRegistry.register({
   pattern: /^(openai|openai\.chat|openai\.responses)\/.+$/,
-  constraints: openaiConstraints,
+  provider: 'openai',
 });
-
-// TODO consider adding patterns like azure/*gpt*, etc.
 
 /**
  * Azure OpenAI
@@ -149,7 +171,7 @@ providerRegistry.register({
  */
 providerRegistry.register({
   pattern: /^(azure|azure\.chat|azure\.responses)\/.*openai.*$/,
-  constraints: openaiConstraints,
+  provider: 'openai',
 });
 
 /**
@@ -160,5 +182,5 @@ providerRegistry.register({
  */
 providerRegistry.register({
   pattern: /^(anthropic|anthropic\.messages)\/.+$/,
-  constraints: anthropicConstraints,
+  provider: 'anthropic',
 });

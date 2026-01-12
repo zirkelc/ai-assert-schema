@@ -1,7 +1,8 @@
 import { describe, expect, test } from 'vitest';
 import type { ModelIdentifier } from '../types.js';
+import { anthropicConstraints } from './anthropic/anthropic.js';
 import { openaiConstraints } from './openai/openai.js';
-import { providerRegistry } from './registry.js';
+import { ProviderRegistry, providerRegistry } from './registry.js';
 
 describe('ProviderRegistry', () => {
   describe('register', () => {
@@ -88,6 +89,41 @@ describe('ProviderRegistry', () => {
       // Last matching pattern should win
       expect(constraints.provider).toBe('last-match-specific');
       expect(constraints.unsupported).toHaveLength(1);
+    });
+
+    test('registers provider alias for openai', () => {
+      const registry = new ProviderRegistry();
+      registry.register({
+        pattern: /^alias-openai-test\/.+$/,
+        provider: 'openai',
+      });
+
+      const constraints = registry.resolve('alias-openai-test/model');
+      expect(constraints.provider).toBe(openaiConstraints.provider);
+      expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
+    });
+
+    test('registers provider alias for anthropic', () => {
+      const registry = new ProviderRegistry();
+      registry.register({
+        pattern: /^alias-anthropic-test\/.+$/,
+        provider: 'anthropic',
+      });
+
+      const constraints = registry.resolve('alias-anthropic-test/model');
+      expect(constraints.provider).toBe(anthropicConstraints.provider);
+      expect(constraints.unsupported).toEqual(anthropicConstraints.unsupported);
+    });
+
+    test('throws error for unknown provider alias', () => {
+      const registry = new ProviderRegistry();
+      expect(() => {
+        registry.register({
+          pattern: /^unknown-provider-test\/.+$/,
+          // @ts-expect-error - testing runtime error for invalid provider
+          provider: 'unknown-provider',
+        });
+      }).toThrow('Unknown provider "unknown-provider"');
     });
   });
 

@@ -218,12 +218,52 @@ export interface ProviderConstraints {
 export type ProviderPattern = string | RegExp;
 
 /**
- * Registry entry mapping a pattern to constraints
+ * Built-in provider names that can be referenced by alias
  */
-export interface ProviderRegistryEntry {
+export type BuiltInProvider = 'openai' | 'anthropic';
+
+/**
+ * Registry entry that references a built-in provider by name
+ *
+ * @example
+ * ```ts
+ * // Register Azure OpenAI to use OpenAI constraints
+ * registry.register({
+ *   pattern: /^azure\/.*openai.*$/,
+ *   provider: 'openai',
+ * });
+ * ```
+ */
+export interface ProviderAliasEntry {
+  pattern: ProviderPattern;
+  provider: BuiltInProvider;
+}
+
+/**
+ * Registry entry with custom constraints
+ *
+ * @example
+ * ```ts
+ * // Register custom provider with custom constraints
+ * registry.register({
+ *   pattern: /^custom\/.+$/,
+ *   constraints: myCustomConstraints,
+ * });
+ * ```
+ */
+export interface ProviderConstraintsEntry {
   pattern: ProviderPattern;
   constraints: ProviderConstraints;
 }
+
+/**
+ * Registry entry mapping a pattern to constraints
+ * - Use `provider` to reference a built-in provider by name
+ * - Use `constraints` to provide custom constraints
+ */
+export type ProviderRegistryEntry =
+  | ProviderAliasEntry
+  | ProviderConstraintsEntry;
 
 /**
  * Resolved constraints for a specific provider/model combination
