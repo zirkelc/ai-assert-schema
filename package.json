@@ -11,6 +11,7 @@
   "exports": {
     ".": "./dist/index.mjs",
     "./constraints/anthropic": "./dist/constraints/anthropic/index.mjs",
+    "./constraints/google": "./dist/constraints/google/index.mjs",
     "./constraints/openai": "./dist/constraints/openai/index.mjs",
     "./package.json": "./package.json"
   },

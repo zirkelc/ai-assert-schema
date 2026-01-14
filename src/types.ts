@@ -220,7 +220,7 @@ export type ProviderPattern = string | RegExp;
 /**
  * Built-in provider names that can be referenced by alias
  */
-export type BuiltInProvider = 'openai' | 'anthropic';
+export type BuiltInProvider = 'openai' | 'anthropic' | 'google';
 
 /**
  * Registry entry that references a built-in provider by name

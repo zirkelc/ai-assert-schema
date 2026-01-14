@@ -9,6 +9,7 @@ import type {
   ResolvedConstraints,
 } from '../types.js';
 import { anthropicConstraints } from './anthropic/anthropic.js';
+import { googleConstraints } from './google/google.js';
 import { openaiConstraints } from './openai/openai.js';
 
 /**
@@ -17,6 +18,7 @@ import { openaiConstraints } from './openai/openai.js';
 const builtInProviders: Record<BuiltInProvider, ProviderConstraints> = {
   openai: openaiConstraints,
   anthropic: anthropicConstraints,
+  google: googleConstraints,
 };
 
 /**
@@ -183,4 +185,16 @@ providerRegistry.register({
 providerRegistry.register({
   pattern: /^(anthropic|anthropic\.messages)\/.+$/,
   provider: 'anthropic',
+});
+
+/**
+ * Google
+ * Matches:
+ *  - google.generative-ai/*
+ *  - google.vertex.chat/*
+ *  - google.vertex/*
+ */
+providerRegistry.register({
+  pattern: /^(google\.generative-ai|google\.vertex\.chat|google\.vertex)\/.+$/,
+  provider: 'google',
 });

@@ -132,7 +132,7 @@ assertSchema({
 
 ## Providers
 
-Currently supported providers: OpenAI, Anthropic.
+Currently supported providers: OpenAI, Anthropic, Google.
 
 ### Register Custom Providers
 
@@ -163,7 +163,7 @@ assertSchema({
 
 #### Provider Aliases
 
-You can also register aliases that reference built-in providers (`'openai'` or `'anthropic'`) instead of providing full constraints:
+You can also register aliases that reference built-in providers (`'openai'`, `'anthropic'`, or `'google'`) instead of providing full constraints:
 
 ```typescript
 import { assertSchema } from 'ai-assert-schema';
@@ -218,6 +218,8 @@ The built-in registry resolves OpenAI models using the following patterns:
 #### Constraints
 
 OpenAI's Structured Outputs have specific [JSON Schema constraints](https://platform.openai.com/docs/guides/structured-outputs). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
+
+> [WARNING!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - `oneOf`
@@ -348,6 +350,8 @@ The built-in registry resolves Anthropic models using the following patterns:
 
 Anthropic's Structured Outputs have specific [JSON Schema constraints](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations). See the full constraint implementation in [`src/constraints/anthropic/anthropic.ts`](src/constraints/anthropic/anthropic.ts).
 
+> [WARNING!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+
 **Unsupported JSON Schema features:**
 - Recursive schemas
 - Numerical constraints (`minimum`, `maximum`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`)
@@ -370,11 +374,48 @@ assertSchema.registry.register({
 });
 ```
 
+### Google
+
+The built-in registry resolves Google models using the following patterns:
+
+- `'google.generative-ai/*'`
+- `'google.vertex.chat/*'`
+- `'google.vertex/*'`
+
+#### Constraints
+
+Google Gemini's Structured Outputs (Gemini 2.0+) have specific [JSON Schema constraints](https://ai.google.dev/gemini-api/docs/structured-output#json_schema_support). See the full constraint implementation in [`src/constraints/google/google.ts`](src/constraints/google/google.ts).
+
+**Unsupported JSON Schema features:**
+- `oneOf`
+- `allOf`
+- `not`
+- `if/then/else` conditionals
+- `pattern`, `minLength`, `maxLength` (string constraints)
+- `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf` (numerical constraints)
+- `dependentRequired`, `dependentSchemas`
+- `patternProperties`, `propertyNames`
+- `uniqueItems`, `contains`, `additionalItems` (array constraints)
+- Recursive schemas
+
+##### Register Google-Compatible Providers
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+
+assertSchema.registry.register({
+  // Match your custom provider
+  pattern: 'my-provider/google-compatible',
+  // Use built-in Google constraints
+  provider: 'google',
+});
+```
+
 ## Contributing
 
 Contributions are welcome!
 
-- **Add new providers**: Submit a PR with constraints for other AI providers (Anthropic, Google, etc.)
+- **Add new providers**: Submit a PR with constraints for other AI providers
 - **Fix constraints**: If you find incorrect constraints, please open an issue or PR
 - **Provider implementations**: See [`src/constraints/openai/`](src/constraints/openai/) for examples
 
