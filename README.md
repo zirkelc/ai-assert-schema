@@ -17,7 +17,8 @@ AI providers like OpenAI only support a [subset of JSON Schema](https://platform
 
 Two typical examples of unsupported JSON schema features are optional properties and discriminated unions.
 
-> [!NOTE] The following examples use Zod for schema definitions, but the same concepts apply to other JSON Schema libraries or raw JSON Schema objects.
+> [!NOTE] 
+> The following examples use Zod for schema definitions, but the same concepts apply to other JSON Schema libraries or raw JSON Schema objects.
 
 **Optional vs Nullable**
 
@@ -275,7 +276,8 @@ The built-in registry resolves OpenAI models using the following patterns:
 
 OpenAI's Structured Outputs have specific [JSON Schema constraints](https://platform.openai.com/docs/guides/structured-outputs). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
 
-> [!WARN] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+> [!WARN] 
+> The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - `oneOf`
@@ -335,7 +337,8 @@ The built-in registry resolves Anthropic models using the following patterns:
 
 Anthropic's Structured Outputs have specific [JSON Schema constraints](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations). See the full constraint implementation in [`src/constraints/anthropic/anthropic.ts`](src/constraints/anthropic/anthropic.ts).
 
-> [!WARN] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+> [!WARN] 
+> The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - Recursive schemas
@@ -371,7 +374,8 @@ The built-in registry resolves Google models using the following patterns:
 
 Google Gemini's Structured Outputs (Gemini 2.0+) have specific [JSON Schema constraints](https://ai.google.dev/gemini-api/docs/structured-output#json_schema_support). See the full constraint implementation in [`src/constraints/google/google.ts`](src/constraints/google/google.ts).
 
-> [!WARN] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+> [!WARN] 
+> The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - `oneOf`
