@@ -17,12 +17,12 @@ AI providers like OpenAI only support a [subset of JSON Schema](https://platform
 
 Two typical examples of unsupported JSON schema features are optional properties and discriminated unions.
 
-> [!NOTE] 
+> [!TIP] 
 > The following examples use Zod for schema definitions, but the same concepts apply to other JSON Schema libraries or raw JSON Schema objects.
 
 **Optional vs Nullable**
 
-Using `z.optional()` removes the property from the `required` array in the JSON schema, while `z.nullable()` keeps the property required, but allows `null` as a valid type.
+Using `z.optional()` removes the property from the `required` array, which is **not supported** by OpenAI. Use `z.nullable()` instead, which keeps the property required but allows `null` as a valid type.
 
 ```typescript
 z.object({
@@ -114,7 +114,8 @@ assertSchema({ schema: invalidSchema, model: { provider: 'openai', modelId: 'gpt
 
 Wrap your schema and model with `assertSchema({ schema, model })`. If the schema is valid, it will be returned unchanged. Otherwise, an error will be thrown before making the API call.
 
-> [NOTE!] This example uses the [AI SDK](https://www.npmjs.com/package/ai) to pass the model, but you can also provide a string or plain object.
+> [!TIP] 
+> This example uses the [AI SDK](https://www.npmjs.com/package/ai) to pass the model, but you can also provide a string or plain object.
 
 ```typescript
 import { openai } from '@ai-sdk/openai';
@@ -276,7 +277,7 @@ The built-in registry resolves OpenAI models using the following patterns:
 
 OpenAI's Structured Outputs have specific [JSON Schema constraints](https://platform.openai.com/docs/guides/structured-outputs). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
 
-> [!WARN] 
+> [!WARNING] 
 > The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
@@ -337,7 +338,7 @@ The built-in registry resolves Anthropic models using the following patterns:
 
 Anthropic's Structured Outputs have specific [JSON Schema constraints](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations). See the full constraint implementation in [`src/constraints/anthropic/anthropic.ts`](src/constraints/anthropic/anthropic.ts).
 
-> [!WARN] 
+> [!WARNING] 
 > The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
@@ -374,7 +375,7 @@ The built-in registry resolves Google models using the following patterns:
 
 Google Gemini's Structured Outputs (Gemini 2.0+) have specific [JSON Schema constraints](https://ai.google.dev/gemini-api/docs/structured-output#json_schema_support). See the full constraint implementation in [`src/constraints/google/google.ts`](src/constraints/google/google.ts).
 
-> [!WARN] 
+> [!WARNING] 
 > The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
