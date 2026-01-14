@@ -13,6 +13,62 @@
 
 AI providers like OpenAI only support a [subset of JSON Schema](https://platform.openai.com/docs/guides/structured-outputs) for structured outputs and tool calling. If you use unsupported features, you may get invalid data not matching your schema or an error at runtime. This library validates your schemas against the constraints of your chosen AI model, so you can catch issues early and transparently.
 
+### Examples
+
+Two typical examples of unsupported JSON schema features are optional properties and discriminated unions.
+
+> [NOTE!] The following examples use Zod for schema definitions, but the same concepts apply to other JSON Schema libraries or raw JSON Schema objects.
+
+**Optional vs Nullable**
+
+Using `z.optional()` removes the property from the `required` array in the JSON schema, while `z.nullable()` keeps the property required, but allows `null` as a valid type.
+
+```typescript
+z.object({
+  optional: z.string().optional(),
+  nullable: z.string().nullable(),
+});
+```
+
+```jsonc
+{
+  "properties": {
+    "optional": { "type": "string" },
+    "nullable": { "type": ["string", "null"] }
+  },
+  "required": ["nullable"] // 'optional' is not required, 'nullable' is required
+}
+```
+
+**Discriminated Union vs Union**
+
+Discriminated unions created with `z.discriminatedUnion()` convert to `oneOf` in JSON Schema, which is **not supported** by OpenAI. Use `z.union()` instead, which converts to `anyOf` and is supported.
+
+```typescript
+const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() });
+const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() });
+
+z.object({
+  discriminatedUnion: z.discriminatedUnion('type', [Dog, Cat]),
+  union: z.union([Dog, Cat]),
+});
+```
+
+```jsonc
+{
+  "properties": {
+    "discriminatedUnion": {
+      // 'oneOf' is not supported by OpenAI 
+      "oneOf": [{ "type": "object", ... }, { "type": "object", ... }]
+    },
+    "union": {
+      // 'anyOf' is supported by OpenAI
+      "anyOf": [{ "type": "object", ... }, { "type": "object", ... }]
+    }
+  }
+}
+```
+
 ## Installation
 
 ```bash
@@ -219,7 +275,7 @@ The built-in registry resolves OpenAI models using the following patterns:
 
 OpenAI's Structured Outputs have specific [JSON Schema constraints](https://platform.openai.com/docs/guides/structured-outputs). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
 
-> [WARNING!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+> [WARN!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - `oneOf`
@@ -234,88 +290,17 @@ OpenAI's Structured Outputs have specific [JSON Schema constraints](https://plat
 - All properties must be required
 - Must use `additionalProperties: false`
 
-##### Examples
-
-**Discriminated Union vs Union**
-
-Discriminated unions created with `z.discriminatedUnion()` convert to `oneOf` in JSON Schema, which is **not supported** by OpenAI.
+##### Register OpenAI-Compatible Providers
 
 ```typescript
-const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() });
-const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() });
+import { assertSchema } from 'ai-assert-schema';
 
-z.object({
-  animal: z.discriminatedUnion('type', [Dog, Cat]),
+assertSchema.registry.register({
+  // Match your custom provider
+  pattern: 'my-provider/openai-compatible',
+  // Use built-in OpenAI constraints
+  provider: 'openai',
 });
-```
-
-```jsonc
-{
-  "properties": {
-    "animal": {
-      // 'oneOf' is not supported by OpenAI 
-      "oneOf": [{ "type": "object", ... }, { "type": "object", ... }]
-    }
-  }
-}
-```
-
-Union created with `z.union()` converts to `anyOf` in JSON Schema, which is supported by OpenAI.
-
-```typescript
-const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() });
-const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() });
-
-z.object({
-  animal: z.union([Dog, Cat]),
-});
-```
-
-```jsonc
-{
-  "properties": {
-    "animal": {
-      // 'anyOf' is supported by OpenAI
-      "anyOf": [{ "type": "object", ... }, { "type": "object", ... }]
-    }
-  }
-}
-```
-
-**Optional vs Nullable**
-
-All properties must be required. Using `z.optional()` removes the property from the `required` array, which is **not supported** by OpenAI.
-
-```typescript
-z.object({
-  name: z.string().optional(),
-});
-```
-
-```jsonc
-{
-  "properties": {
-    "name": { "type": "string" }
-  },
-  "required": [] // 'name' is not required
-}
-```
-
-Using `z.nullable()` keeps the property required, but allows `null` as a valid type, which **is supported** by OpenAI.
-
-```typescript
-z.object({
-  name: z.string().nullable(),
-});
-```
-
-```jsonc
-{
-  "properties": {
-    "name": { "type": ["string", "null"] }
-  },
-  "required": ["name"] // 'name' is required
-}
 ```
 
 ### Azure OpenAI
@@ -350,7 +335,7 @@ The built-in registry resolves Anthropic models using the following patterns:
 
 Anthropic's Structured Outputs have specific [JSON Schema constraints](https://platform.claude.com/docs/en/build-with-claude/structured-outputs#json-schema-limitations). See the full constraint implementation in [`src/constraints/anthropic/anthropic.ts`](src/constraints/anthropic/anthropic.ts).
 
-> [WARNING!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+> [WARN!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - Recursive schemas
@@ -385,6 +370,8 @@ The built-in registry resolves Google models using the following patterns:
 #### Constraints
 
 Google Gemini's Structured Outputs (Gemini 2.0+) have specific [JSON Schema constraints](https://ai.google.dev/gemini-api/docs/structured-output#json_schema_support). See the full constraint implementation in [`src/constraints/google/google.ts`](src/constraints/google/google.ts).
+
+> [WARN!] The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
 
 **Unsupported JSON Schema features:**
 - `oneOf`
