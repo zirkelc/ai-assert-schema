@@ -1,5 +1,7 @@
 export { assertSchema } from './assert.js';
 
+export { SchemaAssertionError } from './errors.js';
+
 // Export types for custom provider implementations
 export type {
   ConstraintRule,
@@ -13,6 +15,7 @@ export type {
   ModelIdentifier,
   ModelObject,
   ModelString,
+  ModelValidationResult,
   // Core types for defining constraints
   ProviderConstraints,
   ProviderPattern,
@@ -20,9 +23,7 @@ export type {
   ProviderRegistryEntry,
   SchemaFeature,
   SchemaInput,
-  ValidationFailure,
+  SchemaValidationResult,
   // Result types
   ValidationIssue,
-  ValidationResult,
-  ValidationSuccess,
 } from './types.js';

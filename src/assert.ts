@@ -74,14 +74,7 @@ export function assertSchema<SCHEMA extends SchemaInput>(
   const result = validateSchema(options);
 
   if (!result.success) {
-    const { issues, jsonSchema, modelId, provider } = result;
-
-    throw new SchemaAssertionError({
-      issues,
-      provider,
-      modelId,
-      jsonSchema: jsonSchema,
-    });
+    throw new SchemaAssertionError(result);
   }
 
   return options.schema;

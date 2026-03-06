@@ -277,30 +277,26 @@ export interface ResolvedConstraints {
 }
 
 /**
- * Schema validation success result
+ * Result for a single model validation
  */
-export interface ValidationSuccess {
-  success: true;
+export interface ModelValidationResult {
   modelId: string;
   provider: string;
+  /** Issues found for this model (empty = passed) */
+  issues: Array<ValidationIssue>;
+  /** JSON Schema used for validation (may differ per model based on provider's jsonSchemaTarget) */
   jsonSchema: JSONSchema;
 }
 
 /**
- * Schema validation failure result
+ * Schema validation result
  */
-export interface ValidationFailure {
-  success: false;
-  modelId: string;
-  provider: string;
-  jsonSchema: JSONSchema;
-  issues: ValidationIssue[];
+export interface SchemaValidationResult {
+  /** True if schema passed validation for all models */
+  success: boolean;
+  /** Results for each model validated against */
+  models: Array<ModelValidationResult>;
 }
-
-/**
- * Schema validation result - discriminated union
- */
-export type ValidationResult = ValidationSuccess | ValidationFailure;
 
 /**
  * Schema input - can be Standard Schema, Standard JSON Schema, or raw JSON Schema
@@ -313,7 +309,7 @@ export type SchemaInput = StandardSchemaV1 | StandardJSONSchemaV1 | JSONSchema;
 export interface ValidateSchemaOptions<
   SCHEMA extends SchemaInput = SchemaInput,
 > {
-  model: ModelIdentifier;
+  model: ModelIdentifier | Array<ModelIdentifier>;
   schema: SCHEMA;
   /** Override JSON Schema target (default: draft-07, matching AI SDK) */
   target?: JSONSchemaTarget;

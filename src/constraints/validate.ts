@@ -3,13 +3,15 @@ import { extractJSONSchema } from '../schema.js';
 import type {
   FeatureContext,
   JSONSchema,
+  ModelIdentifier,
+  ModelValidationResult,
   ResolvedConstraints,
   SchemaFeature,
   SchemaInput,
+  SchemaValidationResult,
   SimpleConstraintRule,
   ValidateSchemaOptions,
   ValidationIssue,
-  ValidationResult,
 } from '../types.js';
 import { providerRegistry } from './registry.js';
 
@@ -25,49 +27,68 @@ import { providerRegistry } from './registry.js';
  *
  * if (!result.success) {
  *   console.warn('Schema has compatibility issues:');
- *   for (const issue of result.issues) {
- *     console.warn(`  - ${issue.message}`);
+ *   for (const model of result.models) {
+ *     console.warn(`${model.provider}/${model.modelId}:`);
+ *     for (const issue of model.issues) {
+ *       console.warn(`- ${issue.message}`);
+ *     }
  *   }
  * }
  * ```
  */
 export function validateSchema<T extends SchemaInput>(
   options: ValidateSchemaOptions<T>,
-): ValidationResult {
+): SchemaValidationResult {
   const { model, schema, target, io, constraints: customConstraints } = options;
 
-  // Get constraints: use custom constraints if provided, otherwise resolve from registry
-  const constraints: ResolvedConstraints = customConstraints
-    ? {
-        provider: customConstraints.provider,
-        modelId: parseModel(model).modelId,
-        unsupported: customConstraints.unsupported,
-        customValidators: customConstraints.customValidators ?? [],
-        jsonSchemaTarget: customConstraints.jsonSchemaTarget,
+  // Normalize model to array
+  const modelArray: Array<ModelIdentifier> = Array.isArray(model)
+    ? model
+    : [model];
+
+  // Cache extracted schemas by target to avoid redundant calls
+  const schemaCache = new Map<string | undefined, JSONSchema>();
+
+  // Validate schema against each model's constraints
+  const modelValidationResults: Array<ModelValidationResult> = modelArray.map(
+    (m) => {
+      const constraints: ResolvedConstraints = customConstraints
+        ? {
+            provider: customConstraints.provider,
+            modelId: parseModel(m).modelId,
+            unsupported: customConstraints.unsupported,
+            customValidators: customConstraints.customValidators ?? [],
+            jsonSchemaTarget: customConstraints.jsonSchemaTarget,
+          }
+        : providerRegistry.resolve(m);
+
+      // Use explicit target, or provider's target, or undefined (default)
+      const effectiveTarget = target ?? constraints.jsonSchemaTarget;
+
+      // Extract schema (cached by target)
+      let jsonSchema = schemaCache.get(effectiveTarget);
+      if (!jsonSchema) {
+        jsonSchema = extractJSONSchema(schema, effectiveTarget, io);
+        schemaCache.set(effectiveTarget, jsonSchema);
       }
-    : providerRegistry.resolve(model);
 
-  // Extract JSON Schema (priority: options.target > constraints.jsonSchemaTarget > default)
-  const jsonSchemaTarget = target ?? constraints.jsonSchemaTarget;
-  const jsonSchema = extractJSONSchema(schema, jsonSchemaTarget, io);
+      const issues = validateSchemaConstraints(jsonSchema, constraints);
 
-  // Validate schema against constraints
-  const issues = validateSchemaConstraints(jsonSchema, constraints);
-
-  return issues.length === 0
-    ? {
-        success: true,
-        jsonSchema,
+      return {
         modelId: constraints.modelId,
         provider: constraints.provider,
-      }
-    : {
-        success: false,
         issues,
         jsonSchema,
-        modelId: constraints.modelId,
-        provider: constraints.provider,
       };
+    },
+  );
+
+  const success = modelValidationResults.every((m) => m.issues.length === 0);
+
+  return {
+    success,
+    models: modelValidationResults,
+  };
 }
 
 interface TraversalContext {

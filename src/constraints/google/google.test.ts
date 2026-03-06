@@ -105,7 +105,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
+        ).toBe(true);
       }
     });
 
@@ -116,7 +118,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
+        ).toBe(true);
       }
     });
   });
@@ -209,7 +213,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'allOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'allOf'),
+        ).toBe(true);
       }
     });
   });
@@ -233,7 +239,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'not')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'not')).toBe(
+          true,
+        );
       }
     });
   });
@@ -321,7 +329,9 @@ describe('Google constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'exclusiveMinimum'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'exclusiveMinimum',
+          ),
         ).toBe(true);
       }
     });
@@ -346,7 +356,9 @@ describe('Google constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'exclusiveMaximum'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'exclusiveMaximum',
+          ),
         ).toBe(true);
       }
     });
@@ -396,7 +408,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'pattern')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'pattern'),
+        ).toBe(true);
       }
     });
   });
@@ -421,7 +435,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'minLength')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'minLength'),
+        ).toBe(true);
       }
     });
 
@@ -444,7 +460,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'maxLength')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'maxLength'),
+        ).toBe(true);
       }
     });
   });
@@ -468,7 +486,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
+          true,
+        );
       }
     });
 
@@ -493,7 +513,9 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
+          true,
+        );
       }
     });
 
@@ -529,7 +551,7 @@ describe('Google constraints', () => {
         model: 'google.generative-ai/gemini-2.0-flash',
       });
       expect(result.success).toBe(true);
-      expect(result.provider).toBe('google');
+      expect(result.models[0]?.provider).toBe('google');
     });
 
     test('matches google.vertex.chat/* pattern', () => {
@@ -545,7 +567,7 @@ describe('Google constraints', () => {
         model: 'google.vertex.chat/gemini-2.0-flash',
       });
       expect(result.success).toBe(true);
-      expect(result.provider).toBe('google');
+      expect(result.models[0]?.provider).toBe('google');
     });
 
     test('matches google.vertex/* pattern', () => {
@@ -561,7 +583,7 @@ describe('Google constraints', () => {
         model: 'google.vertex/gemini-pro',
       });
       expect(result.success).toBe(true);
-      expect(result.provider).toBe('google');
+      expect(result.models[0]?.provider).toBe('google');
     });
   });
 });

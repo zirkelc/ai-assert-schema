@@ -165,11 +165,54 @@ const result = assertSchema.validate({
 });
 
 if (!result.success) {
+  // List compatibility issues for each model
   console.warn('Schema has compatibility issues:');
-  for (const issue of result.issues) {
-    console.warn(`  - ${issue.message}`);
+  for (const model of result.models) {
+    console.warn(`${model.provider}/${model.modelId}:`);
+
+    for (const issue of model.issues) {
+      console.warn(`- ${issue.message}`);
+    }
   }
+
+  // Or create a SchemaAssertionError for automatic error formatting
+  console.error(new SchemaAssertionError(result));
 }
+```
+
+### Multi-Model Validation
+
+Validate a schema against multiple AI providers at once by passing an array of models:
+
+```typescript
+import { assertSchema } from 'ai-assert-schema';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number().min(0).max(150),
+  nickname: z.string().optional(),
+}).strict();
+
+try {
+  assertSchema({
+    schema,
+    model: ['openai/gpt-4o', 'anthropic/claude-sonnet-4-20250514'],
+  });
+} catch (error) {
+  console.error(error.message);
+}
+```
+
+When validation fails, the error message lists each model with its specific issues:
+
+```
+The schema contains unsupported components:
+- openai/gpt-4o (1 issue):
+  1. optionalProperties
+- anthropic/claude-sonnet-4-20250514 (2 issues):
+  1. minimum at "properties.age"
+  2. maximum at "properties.age"
 ```
 
 ### Inline Constraints
@@ -422,7 +465,7 @@ function assertSchema<SCHEMA extends SchemaInput>(
 ```
 
 **Parameters:**
-- `model` - Model identifier as `'provider/model-id'` string or `{ provider, modelId }` object
+- `model` - Model identifier as `'provider/model-id'` string, `{ provider, modelId }` object, or an array of either
 - `schema` - Your schema (Zod, Standard Schema, or JSON Schema object)
 - `constraints` - (optional) Custom constraints to use instead of looking up from registry
 
@@ -435,9 +478,15 @@ function assertSchema<SCHEMA extends SchemaInput>(
 Same parameters as `assertSchema`, but returns a result object instead of throwing:
 
 ```typescript
-type ValidationResult =
-  | { success: true; provider: string; modelId: string; jsonSchema: JSONSchema }
-  | { success: false; provider: string; modelId: string; jsonSchema: JSONSchema; issues: ValidationIssue[] }
+interface SchemaValidationResult {
+  success: boolean;
+  models: Array<{
+    modelId: string;
+    provider: string;
+    issues: ValidationIssue[];
+    jsonSchema: JSONSchema;
+  }>;
+}
 ```
 
 ### `assertSchema.registry`

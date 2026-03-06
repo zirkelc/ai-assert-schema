@@ -174,7 +174,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'minimum')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'minimum'),
+        ).toBe(true);
       }
     });
 
@@ -194,7 +196,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'maximum')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'maximum'),
+        ).toBe(true);
       }
     });
 
@@ -214,9 +218,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'multipleOf')).toBe(
-          true,
-        );
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'multipleOf'),
+        ).toBe(true);
       }
     });
   });
@@ -238,7 +242,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'minLength')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'minLength'),
+        ).toBe(true);
       }
     });
 
@@ -258,7 +264,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'maxLength')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'maxLength'),
+        ).toBe(true);
       }
     });
   });
@@ -280,7 +288,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'maxItems')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'maxItems'),
+        ).toBe(true);
       }
     });
 
@@ -304,9 +314,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'uniqueItems')).toBe(
-          true,
-        );
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'uniqueItems'),
+        ).toBe(true);
       }
     });
 
@@ -330,7 +340,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'contains')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'contains'),
+        ).toBe(true);
       }
     });
 
@@ -384,9 +396,11 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'minItems')).toBe(true);
         expect(
-          result.issues.some((i) =>
+          result.models[0]?.issues.some((i) => i.feature === 'minItems'),
+        ).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) =>
             i.message.includes('minItems only supports values 0 and 1'),
           ),
         ).toBe(true);
@@ -412,7 +426,9 @@ describe('Anthropic constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'additionalProperties'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'additionalProperties',
+          ),
         ).toBe(true);
       }
     });
@@ -443,7 +459,9 @@ describe('Anthropic constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'additionalProperties'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'additionalProperties',
+          ),
         ).toBe(true);
       }
     });
@@ -492,7 +510,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
+          true,
+        );
       }
     });
 
@@ -517,7 +537,9 @@ describe('Anthropic constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
+          true,
+        );
       }
     });
 

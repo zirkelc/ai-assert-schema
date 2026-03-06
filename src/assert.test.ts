@@ -78,12 +78,13 @@ describe('assertSchema', () => {
         const schemaError = error as SchemaAssertionError;
 
         expect(schemaError).toBeInstanceOf(SchemaAssertionError);
-        expect(schemaError.provider).toBe('openai');
-        expect(schemaError.modelId).toBe('gpt-4o');
+        expect(schemaError.result.models.length).toBe(1);
+        expect(schemaError.result.models[0]?.provider).toBe('openai');
+        expect(schemaError.result.models[0]?.modelId).toBe('gpt-4o');
         expect(schemaError.message).toContain('unsupported components');
         expect(schemaError.message).toContain('oneOf');
-        expect(schemaError.issues.length).toBeGreaterThan(0);
-        expect(schemaError.issues[0]?.feature).toBe('oneOf');
+        expect(schemaError.result.models[0]?.issues.length).toBeGreaterThan(0);
+        expect(schemaError.result.models[0]?.issues[0]?.feature).toBe('oneOf');
       }
     });
 
@@ -95,13 +96,16 @@ describe('assertSchema', () => {
         const schemaError = error as SchemaAssertionError;
 
         expect(schemaError).toBeInstanceOf(SchemaAssertionError);
-        expect(schemaError.provider).toBe('openai');
-        expect(schemaError.modelId).toBe('gpt-4o');
-        expect(schemaError.jsonSchema).toBe(invalidJsonSchema);
+        expect(schemaError.result.models.length).toBe(1);
+        expect(schemaError.result.models[0]?.provider).toBe('openai');
+        expect(schemaError.result.models[0]?.modelId).toBe('gpt-4o');
+        expect(schemaError.result.models[0]?.jsonSchema).toBe(
+          invalidJsonSchema,
+        );
         expect(schemaError.message).toContain('unsupported components');
         expect(schemaError.message).toContain('oneOf');
-        expect(schemaError.issues.length).toBeGreaterThan(0);
-        expect(schemaError.issues[0]?.feature).toBe('oneOf');
+        expect(schemaError.result.models[0]?.issues.length).toBeGreaterThan(0);
+        expect(schemaError.result.models[0]?.issues[0]?.feature).toBe('oneOf');
       }
     });
   });
@@ -118,8 +122,10 @@ describe('assertSchema', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.provider).toBe('openai');
-      expect(result.modelId).toBe('gpt-4o');
+      expect(result.models.length).toBe(1);
+      expect(result.models[0]?.provider).toBe('openai');
+      expect(result.models[0]?.modelId).toBe('gpt-4o');
+      expect(result.models[0]?.issues.length).toBe(0);
     });
 
     test('returns failure for invalid schema', () => {
@@ -129,9 +135,10 @@ describe('assertSchema', () => {
       });
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
-      }
+      expect(result.models.length).toBe(1);
+      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(
+        true,
+      );
     });
   });
 
@@ -141,6 +148,49 @@ describe('assertSchema', () => {
       expect(typeof assertSchema.registry.register).toBe('function');
       expect(typeof assertSchema.registry.resolve).toBe('function');
       expect(typeof assertSchema.registry.getAll).toBe('function');
+    });
+  });
+
+  describe('multi-model validation', () => {
+    test('returns schema on success for multiple models', () => {
+      // Arrange
+      const models = ['openai/gpt-4o', 'anthropic/claude-3-5-sonnet'] as const;
+
+      // Act
+      const result = assertSchema({
+        schema: validJsonSchema,
+        model: [...models],
+      });
+
+      // Assert
+      expect(result).toBe(validJsonSchema);
+    });
+
+    test('throws error when any model fails', () => {
+      // Arrange - oneOf is unsupported by OpenAI
+      const models = ['openai/gpt-4o', 'anthropic/claude-3-5-sonnet'] as const;
+
+      // Act & Assert
+      try {
+        assertSchema({
+          schema: invalidJsonSchema,
+          model: [...models],
+        });
+        expect.fail('Should have thrown');
+      } catch (error) {
+        const schemaError = error as SchemaAssertionError;
+
+        expect(schemaError).toBeInstanceOf(SchemaAssertionError);
+        expect(schemaError.result.models.length).toBe(2);
+        // OpenAI should have issues
+        expect(schemaError.result.models[0]?.provider).toBe('openai');
+        expect(schemaError.result.models[0]?.issues.length).toBeGreaterThan(0);
+        // Anthropic should have no issues
+        expect(schemaError.result.models[1]?.provider).toBe('anthropic');
+        expect(schemaError.result.models[1]?.issues.length).toBe(0);
+        // Error message should mention the failing model
+        expect(schemaError.message).toContain('openai/gpt-4o');
+      }
     });
   });
 });

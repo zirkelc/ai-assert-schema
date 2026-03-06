@@ -105,7 +105,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
+        ).toBe(true);
       }
     });
 
@@ -116,7 +118,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
+        ).toBe(true);
       }
     });
   });
@@ -200,7 +204,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'rootAnyOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'rootAnyOf'),
+        ).toBe(true);
       }
     });
   });
@@ -235,7 +241,9 @@ describe('OpenAI constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'optionalProperties'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'optionalProperties',
+          ),
         ).toBe(true);
       }
     });
@@ -248,7 +256,9 @@ describe('OpenAI constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'optionalProperties'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'optionalProperties',
+          ),
         ).toBe(true);
       }
     });
@@ -299,7 +309,9 @@ describe('OpenAI constraints', () => {
         expect(result.success).toBe(false);
         if (!result.success) {
           expect(
-            result.issues.some((i) => i.feature === 'additionalProperties'),
+            result.models[0]?.issues.some(
+              (i) => i.feature === 'additionalProperties',
+            ),
           ).toBe(true);
         }
       });
@@ -313,7 +325,9 @@ describe('OpenAI constraints', () => {
       expect(result.success).toBe(false);
       if (!result.success) {
         expect(
-          result.issues.some((i) => i.feature === 'additionalProperties'),
+          result.models[0]?.issues.some(
+            (i) => i.feature === 'additionalProperties',
+          ),
         ).toBe(true);
       }
     });
@@ -355,7 +369,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
+        ).toBe(true);
       }
     });
   });
@@ -382,7 +398,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'oneOf')).toBe(true);
+        expect(
+          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
+        ).toBe(true);
       }
     });
   });
@@ -406,7 +424,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
+          true,
+        );
       }
     });
 
@@ -431,7 +451,9 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.issues.some((i) => i.feature === 'enum')).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
+          true,
+        );
       }
     });
 

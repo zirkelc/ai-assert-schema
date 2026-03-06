@@ -1,38 +1,32 @@
-import type { JSONSchema, ValidationIssue } from './types.js';
-
-export interface SchemaAssertionErrorOptions {
-  issues: ValidationIssue[];
-  provider: string;
-  modelId: string;
-  jsonSchema: JSONSchema;
-}
+import type { SchemaValidationResult } from './types.js';
 
 /**
  * Error thrown when schema assertion fails
  */
 export class SchemaAssertionError extends Error {
-  readonly issues: ValidationIssue[];
-  readonly provider: string;
-  readonly modelId: string;
-  readonly jsonSchema: JSONSchema;
+  readonly result: SchemaValidationResult;
 
-  constructor(options: SchemaAssertionErrorOptions) {
-    const { issues, provider, modelId, jsonSchema } = options;
+  constructor(result: SchemaValidationResult) {
+    const { models } = result;
 
-    const components = issues.map((issue) => {
-      const path = issue.path.length > 0 ? ` at "${issue.path.join('.')}"` : '';
-      return `${issue.feature}${path}`;
+    const failedModels = models.filter((m) => m.issues.length > 0);
+    const modelValidationMessages = failedModels.map((model) => {
+      const issueCount = model.issues.length;
+      const issueWord = issueCount === 1 ? 'issue' : 'issues';
+      const issueLines = model.issues.map((issue, index) => {
+        const path =
+          issue.path.length > 0 ? ` at "${issue.path.join('.')}"` : '';
+        return `  ${index + 1}. ${issue.feature}${path}`;
+      });
+      return `- ${model.provider}/${model.modelId} (${issueCount} ${issueWord}):\n${issueLines.join('\n')}`;
     });
 
-    const message = `The schema contains unsupported components for ${provider}/${modelId}: ${components.join(', ')}`;
+    const message = `The schema contains unsupported components:\n${modelValidationMessages.join('\n')}`;
 
     super(message);
 
     this.name = 'SchemaAssertionError';
-    this.issues = issues;
-    this.provider = provider;
-    this.modelId = modelId;
-    this.jsonSchema = jsonSchema;
+    this.result = result;
 
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SchemaAssertionError);
