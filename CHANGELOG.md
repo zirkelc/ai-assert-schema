@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.3.0...v1.4.0) (2026-01-14)
+
+
+### Features
+
+* add google gemini provider ([804492d](https://github.com/zirkelc/ai-assert-schema/commit/804492de32c78e2baba2013c9ff696e69ef77ba8))
+
 ## [1.3.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.2.0...v1.3.0) (2026-01-12)
 
 
