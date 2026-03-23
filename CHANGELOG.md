@@ -1,5 +1,21 @@
 # Changelog
 
+## [2.0.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.4.0...v2.0.0) (2026-03-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* support multi model validation
+
+### Features
+
+* support multi model validation ([28553c1](https://github.com/zirkelc/ai-assert-schema/commit/28553c154ea07032215e90e1ed0a73dcecb18a2e))
+
+
+### Miscellaneous Chores
+
+* release 2.0.0 ([0dac6fe](https://github.com/zirkelc/ai-assert-schema/commit/0dac6fedeeeef2e300195077920464b0186c53f6))
+
 ## [1.4.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.3.0...v1.4.0) (2026-01-14)
 
 
