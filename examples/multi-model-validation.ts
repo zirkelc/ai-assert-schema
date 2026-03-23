@@ -11,13 +11,11 @@
 import { z } from 'zod';
 import { assertSchema } from '../src/index.js';
 
-const schema = z
-  .object({
-    name: z.string(),
-    age: z.number().min(0).max(150), // fails Anthropic (minimum/maximum not supported)
-    nickname: z.string().optional(), // fails OpenAI (optional properties not supported)
-  })
-  .strict();
+const schema = z.object({
+  name: z.string(),
+  age: z.number().min(0).max(150), // fails Anthropic (minimum/maximum not supported)
+  nickname: z.string().optional(), // fails OpenAI (optional properties not supported)
+});
 
 try {
   assertSchema({

@@ -2,12 +2,31 @@
   "name": "ai-assert-schema",
   "version": "1.4.0",
   "description": "Assert schemas for compatibility against your AI models",
-  "packageManager": "pnpm@10.18.2",
-  "types": "./dist/index.d.mts",
-  "type": "module",
+  "keywords": [
+    "ai",
+    "json-schema",
+    "openai",
+    "schema",
+    "standard-schema",
+    "structured-output",
+    "validation",
+    "zod"
+  ],
+  "homepage": "https://github.com/zirkelc/ai-assert-schema#readme",
+  "bugs": {
+    "url": "https://github.com/zirkelc/ai-assert-schema/issues"
+  },
+  "license": "MIT",
+  "author": "Chris Cook",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zirkelc/ai-assert-schema.git"
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
+  "types": "./dist/index.d.mts",
   "exports": {
     ".": "./dist/index.mjs",
     "./constraints/anthropic": "./dist/constraints/anthropic/index.mjs",
@@ -19,39 +38,27 @@
     "prepublishOnly": "pnpm build",
     "build": "tsdown",
     "test": "vitest",
-    "lint": "biome check . --write",
+    "lint": "oxlint --fix --quiet",
+    "lint:ci": "oxlint --format=github",
+    "format": "oxfmt",
+    "format:ci": "oxfmt --check",
     "prepare": "husky"
   },
-  "keywords": [
-    "ai",
-    "schema",
-    "validation",
-    "zod",
-    "json-schema",
-    "openai",
-    "structured-output",
-    "standard-schema"
-  ],
-  "author": "Chris Cook",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zirkelc/ai-assert-schema.git"
+  "dependencies": {
+    "@standard-schema/spec": "^1.1.0"
   },
-  "bugs": {
-    "url": "https://github.com/zirkelc/ai-assert-schema/issues"
-  },
-  "homepage": "https://github.com/zirkelc/ai-assert-schema#readme",
   "devDependencies": {
     "@ai-sdk/openai": "^3.0.7",
     "@arethetypeswrong/cli": "^0.18.2",
-    "@biomejs/biome": "^2.3.11",
     "@total-typescript/tsconfig": "^1.0.4",
     "@types/json-schema": "^7.0.15",
     "@types/node": "^25.0.3",
     "ai": "^6.0.24",
     "chalk": "^5.6.2",
     "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
+    "oxfmt": "^0.41.0",
+    "oxlint": "^1.56.0",
     "pkg-pr-new": "^0.0.62",
     "publint": "^0.3.16",
     "tsdown": "0.19.0-beta.5",
@@ -60,7 +67,9 @@
     "vitest": "^4.0.16",
     "zod": "^4.3.5"
   },
-  "dependencies": {
-    "@standard-schema/spec": "^1.1.0"
-  }
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": "pnpm run lint",
+    "*": "pnpm run format --no-error-on-unmatched-pattern"
+  },
+  "packageManager": "pnpm@10.18.2"
 }
