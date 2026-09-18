@@ -72,15 +72,12 @@ export const openaiConstraints: ProviderConstraints = {
       validate: (schema, path): ValidationIssue[] => {
         const issues: ValidationIssue[] = [];
         if (schema.enum && Array.isArray(schema.enum)) {
-          const hasComplexTypes = schema.enum.some(
-            (val) => val !== null && typeof val === 'object',
-          );
+          const hasComplexTypes = schema.enum.some((val) => val !== null && typeof val === 'object');
           if (hasComplexTypes) {
             issues.push({
               path: [...path],
               feature: 'enum',
-              message:
-                'Enum values must be strings, numbers, booleans, or null - complex types are not supported',
+              message: 'Enum values must be strings, numbers, booleans, or null - complex types are not supported',
             });
           }
         }

@@ -1,9 +1,4 @@
-import type {
-  ModelIdentifier,
-  ModelObject,
-  ModelString,
-  ParsedModel,
-} from './types.js';
+import type { ModelIdentifier, ModelObject, ModelString, ParsedModel } from './types.js';
 
 /**
  * Check if the model is an object with provider and modelId properties
@@ -49,9 +44,7 @@ function parseModelString(model: string): ParsedModel {
   const modelId = model.slice(slashIndex + 1);
 
   if (!provider || !modelId) {
-    throw new Error(
-      `Invalid model identifier: "${model}". Both provider and model-id are required.`,
-    );
+    throw new Error(`Invalid model identifier: "${model}". Both provider and model-id are required.`);
   }
 
   return {
@@ -63,9 +56,7 @@ function parseModelString(model: string): ParsedModel {
 
 function parseModelObject(model: ModelObject): ParsedModel {
   if (!model.provider || !model.modelId) {
-    throw new Error(
-      'Invalid model identifier object. Both provider and modelId are required.',
-    );
+    throw new Error('Invalid model identifier object. Both provider and modelId are required.');
   }
 
   return {

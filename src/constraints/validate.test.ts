@@ -69,9 +69,7 @@ describe('validateSchema', () => {
       expect(result.models.length).toBe(1);
       expect(result.models[0]?.provider).toBe('openai');
       expect(result.models[0]?.modelId).toBe('gpt-4o');
-      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(
-        true,
-      );
+      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
     });
 
     test('returns failure with issues for JSON schema', () => {
@@ -84,9 +82,7 @@ describe('validateSchema', () => {
       expect(result.models.length).toBe(1);
       expect(result.models[0]?.provider).toBe('openai');
       expect(result.models[0]?.modelId).toBe('gpt-4o');
-      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(
-        true,
-      );
+      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
     });
   });
 
@@ -122,11 +118,7 @@ describe('validateSchema', () => {
       });
 
       expect(result.success).toBe(false);
-      expect(
-        result.models[0]?.issues.some(
-          (i) => i.feature === 'additionalProperties',
-        ),
-      ).toBe(true);
+      expect(result.models[0]?.issues.some((i) => i.feature === 'additionalProperties')).toBe(true);
     });
 
     test('io option does not affect JSON schema validation', () => {
@@ -197,11 +189,7 @@ describe('validateSchema', () => {
     test('returns success when all models pass', () => {
       // Arrange
       const schema = validJsonSchema;
-      const models = [
-        'openai/gpt-4o',
-        'anthropic/claude-3-5-sonnet',
-        'google/gemini-2.0-flash',
-      ] as const;
+      const models = ['openai/gpt-4o', 'anthropic/claude-3-5-sonnet', 'google/gemini-2.0-flash'] as const;
 
       // Act
       const result = validateSchema({

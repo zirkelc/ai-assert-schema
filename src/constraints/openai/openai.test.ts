@@ -28,9 +28,7 @@ describe('OpenAI constraints', () => {
       expect(extracted.type).toBe(jsonSchema.type);
       expect(extracted.properties).toEqual(jsonSchema.properties);
       expect(extracted.required).toEqual(jsonSchema.required);
-      expect(extracted.additionalProperties).toBe(
-        jsonSchema.additionalProperties,
-      );
+      expect(extracted.additionalProperties).toBe(jsonSchema.additionalProperties);
     });
 
     test('passes for Zod schema', () => {
@@ -51,12 +49,8 @@ describe('OpenAI constraints', () => {
   });
 
   describe('fails on oneOf (discriminatedUnion)', () => {
-    const Dog = z
-      .object({ type: z.literal('dog'), bark: z.boolean() })
-      .strict();
-    const Cat = z
-      .object({ type: z.literal('cat'), meow: z.boolean() })
-      .strict();
+    const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() }).strict();
+    const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() }).strict();
     const zodSchema = z
       .object({
         animal: z.discriminatedUnion('type', [Dog, Cat]),
@@ -105,9 +99,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
 
@@ -118,20 +110,14 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
   });
 
   describe('passes anyOf within properties (union)', () => {
-    const Dog = z
-      .object({ type: z.literal('dog'), bark: z.boolean() })
-      .strict();
-    const Cat = z
-      .object({ type: z.literal('cat'), meow: z.boolean() })
-      .strict();
+    const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() }).strict();
+    const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() }).strict();
     const zodSchema = z
       .object({
         animal: z.union([Dog, Cat]),
@@ -204,9 +190,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'rootAnyOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'rootAnyOf')).toBe(true);
       }
     });
   });
@@ -240,11 +224,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'optionalProperties',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'optionalProperties')).toBe(true);
       }
     });
 
@@ -255,11 +235,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'optionalProperties',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'optionalProperties')).toBe(true);
       }
     });
   });
@@ -308,11 +284,7 @@ describe('OpenAI constraints', () => {
         });
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(
-            result.models[0]?.issues.some(
-              (i) => i.feature === 'additionalProperties',
-            ),
-          ).toBe(true);
+          expect(result.models[0]?.issues.some((i) => i.feature === 'additionalProperties')).toBe(true);
         }
       });
     });
@@ -324,11 +296,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'additionalProperties',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'additionalProperties')).toBe(true);
       }
     });
   });
@@ -369,9 +337,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
   });
@@ -398,9 +364,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
   });
@@ -424,9 +388,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(true);
       }
     });
 
@@ -451,9 +413,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(true);
       }
     });
 

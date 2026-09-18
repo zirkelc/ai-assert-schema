@@ -1,16 +1,11 @@
-import type {
-  StandardJSONSchemaV1,
-  StandardSchemaV1,
-} from '@standard-schema/spec';
+import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
 import type { JSONSchema, JSONSchemaIO, SchemaInput } from './types.js';
 
 /**
  * Check if the input is a Standard Schema (v1)
  * Works with both StandardSchemaV1 (validation) and StandardJSONSchemaV1 (JSON Schema)
  */
-export function isStandardSchema(
-  schema: unknown,
-): schema is StandardSchemaV1 | StandardJSONSchemaV1 {
+export function isStandardSchema(schema: unknown): schema is StandardSchemaV1 | StandardJSONSchemaV1 {
   return (
     typeof schema === 'object' &&
     schema !== null &&
@@ -24,9 +19,7 @@ export function isStandardSchema(
 /**
  * Check if Standard Schema has JSON Schema support (StandardJSONSchemaV1)
  */
-export function hasJSONSchemaSupport(
-  schema: StandardSchemaV1 | StandardJSONSchemaV1,
-): schema is StandardJSONSchemaV1 {
+export function hasJSONSchemaSupport(schema: StandardSchemaV1 | StandardJSONSchemaV1): schema is StandardJSONSchemaV1 {
   const std = schema['~standard'] as StandardJSONSchemaV1['~standard'];
   return (
     'jsonSchema' in std &&
@@ -96,9 +89,7 @@ export function extractJSONSchema(
       // Use the specified IO mode (default: 'output' to include additionalProperties: false)
       const jsonSchemaMethod = schema['~standard'].jsonSchema?.[io];
       if (!jsonSchemaMethod) {
-        throw new Error(
-          `Standard Schema does not support '${io}' mode for JSON Schema conversion.`,
-        );
+        throw new Error(`Standard Schema does not support '${io}' mode for JSON Schema conversion.`);
       }
       return jsonSchemaMethod({ target }) as JSONSchema;
     }
@@ -117,7 +108,6 @@ export function extractJSONSchema(
 
   // Unknown schema type
   throw new Error(
-    'Invalid schema input. Expected a Standard Schema (Zod, Valibot, etc.) ' +
-      'or a raw JSON Schema object.',
+    'Invalid schema input. Expected a Standard Schema (Zod, Valibot, etc.) ' + 'or a raw JSON Schema object.',
   );
 }

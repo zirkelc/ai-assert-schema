@@ -1,11 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
-import {
-  extractJSONSchema,
-  hasJSONSchemaSupport,
-  isJSONSchema,
-  isStandardSchema,
-} from './schema.js';
+import { extractJSONSchema, hasJSONSchemaSupport, isJSONSchema, isStandardSchema } from './schema.js';
 
 describe('isStandardSchema', () => {
   test('detects Zod schema as Standard Schema', () => {
@@ -39,15 +34,11 @@ describe('isJSONSchema', () => {
   });
 
   test('detects JSON Schema with properties', () => {
-    expect(isJSONSchema({ properties: { name: { type: 'string' } } })).toBe(
-      true,
-    );
+    expect(isJSONSchema({ properties: { name: { type: 'string' } } })).toBe(true);
   });
 
   test('detects JSON Schema with $schema', () => {
-    expect(
-      isJSONSchema({ $schema: 'https://json-schema.org/draft/2020-12/schema' }),
-    ).toBe(true);
+    expect(isJSONSchema({ $schema: 'https://json-schema.org/draft/2020-12/schema' })).toBe(true);
   });
 
   test('returns false for empty object', () => {
@@ -88,8 +79,6 @@ describe('extractJSONSchema', () => {
   test('respects custom target', () => {
     const zodSchema = z.object({ name: z.string() });
     const jsonSchema = extractJSONSchema(zodSchema, 'draft-2020-12');
-    expect(jsonSchema.$schema).toBe(
-      'https://json-schema.org/draft/2020-12/schema',
-    );
+    expect(jsonSchema.$schema).toBe('https://json-schema.org/draft/2020-12/schema');
   });
 });

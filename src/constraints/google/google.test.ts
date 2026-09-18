@@ -28,9 +28,7 @@ describe('Google constraints', () => {
       expect(extracted.type).toBe(jsonSchema.type);
       expect(extracted.properties).toEqual(jsonSchema.properties);
       expect(extracted.required).toEqual(jsonSchema.required);
-      expect(extracted.additionalProperties).toBe(
-        jsonSchema.additionalProperties,
-      );
+      expect(extracted.additionalProperties).toBe(jsonSchema.additionalProperties);
     });
 
     test('passes for Zod schema', () => {
@@ -51,12 +49,8 @@ describe('Google constraints', () => {
   });
 
   describe('fails on oneOf (discriminatedUnion)', () => {
-    const Dog = z
-      .object({ type: z.literal('dog'), bark: z.boolean() })
-      .strict();
-    const Cat = z
-      .object({ type: z.literal('cat'), meow: z.boolean() })
-      .strict();
+    const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() }).strict();
+    const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() }).strict();
     const zodSchema = z
       .object({
         animal: z.discriminatedUnion('type', [Dog, Cat]),
@@ -105,9 +99,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
 
@@ -118,20 +110,14 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
   });
 
   describe('passes anyOf (union) - unlike older Gemini versions', () => {
-    const Dog = z
-      .object({ type: z.literal('dog'), bark: z.boolean() })
-      .strict();
-    const Cat = z
-      .object({ type: z.literal('cat'), meow: z.boolean() })
-      .strict();
+    const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() }).strict();
+    const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() }).strict();
     const zodSchema = z
       .object({
         animal: z.union([Dog, Cat]),
@@ -213,9 +199,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'allOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'allOf')).toBe(true);
       }
     });
   });
@@ -239,9 +223,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'not')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'not')).toBe(true);
       }
     });
   });
@@ -328,11 +310,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'exclusiveMinimum',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'exclusiveMinimum')).toBe(true);
       }
     });
 
@@ -355,11 +333,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'exclusiveMaximum',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'exclusiveMaximum')).toBe(true);
       }
     });
   });
@@ -408,9 +382,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'pattern'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'pattern')).toBe(true);
       }
     });
   });
@@ -435,9 +407,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'minLength'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'minLength')).toBe(true);
       }
     });
 
@@ -460,9 +430,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'maxLength'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'maxLength')).toBe(true);
       }
     });
   });
@@ -486,9 +454,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(true);
       }
     });
 
@@ -513,9 +479,7 @@ describe('Google constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(true);
       }
     });
 
