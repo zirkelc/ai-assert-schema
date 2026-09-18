@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
+import { assertSchema } from '../../assert.js';
 import { extractJSONSchema } from '../../schema.js';
 import type { JSONSchema } from '../../types.js';
 import { validateSchema } from '../validate.js';
@@ -28,9 +29,7 @@ describe('OpenAI constraints', () => {
       expect(extracted.type).toBe(jsonSchema.type);
       expect(extracted.properties).toEqual(jsonSchema.properties);
       expect(extracted.required).toEqual(jsonSchema.required);
-      expect(extracted.additionalProperties).toBe(
-        jsonSchema.additionalProperties,
-      );
+      expect(extracted.additionalProperties).toBe(jsonSchema.additionalProperties);
     });
 
     test('passes for Zod schema', () => {
@@ -51,12 +50,8 @@ describe('OpenAI constraints', () => {
   });
 
   describe('fails on oneOf (discriminatedUnion)', () => {
-    const Dog = z
-      .object({ type: z.literal('dog'), bark: z.boolean() })
-      .strict();
-    const Cat = z
-      .object({ type: z.literal('cat'), meow: z.boolean() })
-      .strict();
+    const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() }).strict();
+    const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() }).strict();
     const zodSchema = z
       .object({
         animal: z.discriminatedUnion('type', [Dog, Cat]),
@@ -105,9 +100,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
 
@@ -118,20 +111,14 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
   });
 
   describe('passes anyOf within properties (union)', () => {
-    const Dog = z
-      .object({ type: z.literal('dog'), bark: z.boolean() })
-      .strict();
-    const Cat = z
-      .object({ type: z.literal('cat'), meow: z.boolean() })
-      .strict();
+    const Dog = z.object({ type: z.literal('dog'), bark: z.boolean() }).strict();
+    const Cat = z.object({ type: z.literal('cat'), meow: z.boolean() }).strict();
     const zodSchema = z
       .object({
         animal: z.union([Dog, Cat]),
@@ -204,9 +191,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'rootAnyOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'rootAnyOf')).toBe(true);
       }
     });
   });
@@ -240,11 +225,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'optionalProperties',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'optionalProperties')).toBe(true);
       }
     });
 
@@ -255,11 +236,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'optionalProperties',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'optionalProperties')).toBe(true);
       }
     });
   });
@@ -308,11 +285,7 @@ describe('OpenAI constraints', () => {
         });
         expect(result.success).toBe(false);
         if (!result.success) {
-          expect(
-            result.models[0]?.issues.some(
-              (i) => i.feature === 'additionalProperties',
-            ),
-          ).toBe(true);
+          expect(result.models[0]?.issues.some((i) => i.feature === 'additionalProperties')).toBe(true);
         }
       });
     });
@@ -324,11 +297,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some(
-            (i) => i.feature === 'additionalProperties',
-          ),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'additionalProperties')).toBe(true);
       }
     });
   });
@@ -369,9 +338,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
     });
   });
@@ -398,10 +365,108 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(
-          result.models[0]?.issues.some((i) => i.feature === 'oneOf'),
-        ).toBe(true);
+        expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
+    });
+  });
+
+  describe('fails on string length constraints', () => {
+    test('fails on minLength', () => {
+      // Arrange
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 1 },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      };
+
+      // Act
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.models[0]?.issues).toEqual([
+        {
+          path: ['properties', 'name'],
+          feature: 'minLength',
+          message: 'minLength constraint is not supported',
+        },
+      ]);
+    });
+
+    test('fails on maxLength', () => {
+      // Arrange
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 100 },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      };
+
+      // Act
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.models[0]?.issues).toEqual([
+        {
+          path: ['properties', 'name'],
+          feature: 'maxLength',
+          message: 'maxLength constraint is not supported',
+        },
+      ]);
+    });
+
+    test('assertSchema throws for Zod string with min()', () => {
+      // Arrange
+      const zodSchema = z.object({ q: z.string().trim().min(1) });
+
+      // Act
+      const act = () => assertSchema({ schema: zodSchema, model: 'openai/gpt-5.4' });
+
+      // Assert
+      expect(act).toThrow();
+    });
+  });
+
+  describe('passes documented string, number and array properties', () => {
+    test('passes for pattern, format, minimum, maximum, minItems and maxItems', () => {
+      // Arrange
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          code: { type: 'string', pattern: '^[A-Z]{3}$' },
+          email: { type: 'string', format: 'email' },
+          temperature: { type: 'number', minimum: -130, maximum: 130 },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            minItems: 1,
+            maxItems: 5,
+          },
+        },
+        required: ['code', 'email', 'temperature', 'tags'],
+        additionalProperties: false,
+      };
+
+      // Act
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
     });
   });
 
@@ -424,9 +489,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(true);
       }
     });
 
@@ -451,9 +514,7 @@ describe('OpenAI constraints', () => {
       });
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(
-          true,
-        );
+        expect(result.models[0]?.issues.some((i) => i.feature === 'enum')).toBe(true);
       }
     });
 

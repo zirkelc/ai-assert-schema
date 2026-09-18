@@ -11,7 +11,7 @@
 
 ## Why?
 
-AI providers like OpenAI only support a [subset of JSON Schema](https://platform.openai.com/docs/guides/structured-outputs) for structured outputs and tool calling. If you use unsupported features, you may get invalid data not matching your schema or an error at runtime. This library validates your schemas against the constraints of your chosen AI model, so you can catch issues early and transparently.
+AI providers like OpenAI only support a [subset of JSON Schema](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas) for structured outputs and tool calling. If you use unsupported features, you may get invalid data not matching your schema or an error at runtime. This library validates your schemas against the constraints of your chosen AI model, so you can catch issues early and transparently.
 
 ### Examples
 
@@ -318,7 +318,7 @@ The built-in registry resolves OpenAI models using the following patterns:
 
 #### Constraints
 
-OpenAI's Structured Outputs have specific [JSON Schema constraints](https://platform.openai.com/docs/guides/structured-outputs). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
+OpenAI's Structured Outputs have specific [JSON Schema constraints](https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas). See the full constraint implementation in [`src/constraints/openai/openai.ts`](src/constraints/openai/openai.ts).
 
 > [!WARNING] 
 > The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
@@ -331,6 +331,7 @@ OpenAI's Structured Outputs have specific [JSON Schema constraints](https://plat
 - `if/then/else` conditionals
 - `dependentRequired`, `dependentSchemas`
 - `patternProperties`
+- `minLength`, `maxLength` (string constraints)
 
 **Required constraints:**
 - All properties must be required
