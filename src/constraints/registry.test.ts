@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { ModelIdentifier } from '../types.js';
 import { anthropicConstraints } from './anthropic/anthropic.js';
-import { azureConstraints } from './azure/azure.js';
 import { openaiConstraints } from './openai/openai.js';
 import { ProviderRegistry, providerRegistry } from './registry.js';
 
@@ -181,10 +180,10 @@ describe('ProviderRegistry', () => {
         'azure.chat/my-openai-model',
         'azure.responses/openai-deployment',
         'azure.responses/gpt-openai-4o',
-      ])('resolves %s to azureConstraints', (model) => {
+      ])('resolves %s to openaiConstraints', (model) => {
         const constraints = providerRegistry.resolve(model);
-        expect(constraints.provider).toBe(azureConstraints.provider);
-        expect(constraints.unsupported).toEqual(azureConstraints.unsupported);
+        expect(constraints.provider).toBe(openaiConstraints.provider);
+        expect(constraints.unsupported).toEqual(openaiConstraints.unsupported);
       });
 
       test.each<ModelIdentifier>([
