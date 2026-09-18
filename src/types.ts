@@ -206,16 +206,16 @@ export type ProviderPattern = string | RegExp;
 /**
  * Built-in provider names that can be referenced by alias
  */
-export type BuiltInProvider = 'openai' | 'azure' | 'anthropic' | 'google';
+export type BuiltInProvider = 'openai' | 'anthropic' | 'google';
 
 /**
  * Registry entry that references a built-in provider by name
  *
  * @example
  * ```ts
- * // Register an OpenAI-compatible provider to use OpenAI constraints
+ * // Register Azure OpenAI to use OpenAI constraints
  * registry.register({
- *   pattern: /^my-provider\/.+$/,
+ *   pattern: /^azure\/.*openai.*$/,
  *   provider: 'openai',
  * });
  * ```

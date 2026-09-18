@@ -9,7 +9,6 @@ import type {
   ResolvedConstraints,
 } from '../types.js';
 import { anthropicConstraints } from './anthropic/anthropic.js';
-import { azureConstraints } from './azure/azure.js';
 import { googleConstraints } from './google/google.js';
 import { openaiConstraints } from './openai/openai.js';
 
@@ -18,7 +17,6 @@ import { openaiConstraints } from './openai/openai.js';
  */
 const builtInProviders: Record<BuiltInProvider, ProviderConstraints> = {
   openai: openaiConstraints,
-  azure: azureConstraints,
   anthropic: anthropicConstraints,
   google: googleConstraints,
 };
@@ -46,7 +44,7 @@ export class ProviderRegistry {
    * // Reference built-in provider by name
    * registry.register({
    *   pattern: /^azure\/.*openai.*$/,
-   *   provider: 'azure',
+   *   provider: 'openai',
    * });
    *
    * // Or provide custom constraints
@@ -171,7 +169,7 @@ providerRegistry.register({
  */
 providerRegistry.register({
   pattern: /^(azure|azure\.chat|azure\.responses)\/.*openai.*$/,
-  provider: 'azure',
+  provider: 'openai',
 });
 
 /**
