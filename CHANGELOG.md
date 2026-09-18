@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.0.1](https://github.com/zirkelc/ai-assert-schema/compare/v2.0.0...v2.0.1) (2026-09-18)
+
+
+### Bug Fixes
+
+* add stricter azure openai constraints ([#10](https://github.com/zirkelc/ai-assert-schema/issues/10)) ([f90c281](https://github.com/zirkelc/ai-assert-schema/commit/f90c2812666ccf2ce275ffa095a2b86d7a06b292))
+* reject minLength and maxLength for openai ([#13](https://github.com/zirkelc/ai-assert-schema/issues/13)) ([b8a9a59](https://github.com/zirkelc/ai-assert-schema/commit/b8a9a5947c44a8a4624e854374338e198c3511a3))
+
+
+### Reverts
+
+* remove azure openai constraints ([#12](https://github.com/zirkelc/ai-assert-schema/issues/12)) ([1724ca3](https://github.com/zirkelc/ai-assert-schema/commit/1724ca35555d63bf4127e3a193e1b286a1147a8f))
+
 ## [2.0.0](https://github.com/zirkelc/ai-assert-schema/compare/v1.4.0...v2.0.0) (2026-03-06)
 
 
