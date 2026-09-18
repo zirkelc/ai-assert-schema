@@ -3,15 +3,23 @@ import type { ProviderConstraints, ValidationIssue } from '../../types.js';
 /**
  * OpenAI constraints
  *
- * Based on: https://platform.openai.com/docs/guides/structured-outputs#supported-schemas
+ * Based on: https://developers.openai.com/api/docs/guides/structured-outputs#supported-schemas
  *
  * OpenAI supports a subset of JSON Schema:
  * - Supported types: string, number, integer, boolean, object, array, enum, anyOf (within properties)
+ * - Supported string properties: pattern, format (date-time, time, date, duration, email, hostname, ipv4, ipv6, uuid)
+ * - Supported number properties: multipleOf, maximum, exclusiveMaximum, minimum, exclusiveMinimum
+ * - Supported array properties: minItems, maxItems
+ * - NOT supported: string length constraints (minLength, maxLength), they are not in the supported list for any model
  * - NOT supported at root level: anyOf
  * - NOT supported anywhere: oneOf, allOf, not, if/then/else, dependentRequired, dependentSchemas
  * - Required: All properties must be in `required` array
  * - Required: `additionalProperties: false`
  * - Enum: only primitive values (strings, numbers, booleans, null) - no complex types (objects, arrays)
+ *
+ * With `strict: true`, the API returns an error for a schema that uses an unsupported keyword.
+ * Fine-tuned models also do not support pattern, format, minimum, maximum, multipleOf,
+ * minItems and maxItems. This table follows the base models.
  */
 export const openaiConstraints: ProviderConstraints = {
   provider: 'openai',
@@ -36,6 +44,9 @@ export const openaiConstraints: ProviderConstraints = {
       message: 'dependentSchemas is not supported',
     },
     { feature: 'if', message: 'if/then/else conditionals are not supported' },
+    // String constraints
+    { feature: 'minLength', message: 'minLength constraint is not supported' },
+    { feature: 'maxLength', message: 'maxLength constraint is not supported' },
     {
       feature: 'patternProperties',
       message: 'patternProperties is not supported',

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { z } from 'zod';
+import { assertSchema } from '../../assert.js';
 import { extractJSONSchema } from '../../schema.js';
 import type { JSONSchema } from '../../types.js';
 import { validateSchema } from '../validate.js';
@@ -366,6 +367,106 @@ describe('OpenAI constraints', () => {
       if (!result.success) {
         expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
       }
+    });
+  });
+
+  describe('fails on string length constraints', () => {
+    test('fails on minLength', () => {
+      // Arrange
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string', minLength: 1 },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      };
+
+      // Act
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.models[0]?.issues).toEqual([
+        {
+          path: ['properties', 'name'],
+          feature: 'minLength',
+          message: 'minLength constraint is not supported',
+        },
+      ]);
+    });
+
+    test('fails on maxLength', () => {
+      // Arrange
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          name: { type: 'string', maxLength: 100 },
+        },
+        required: ['name'],
+        additionalProperties: false,
+      };
+
+      // Act
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+
+      // Assert
+      expect(result.success).toBe(false);
+      expect(result.models[0]?.issues).toEqual([
+        {
+          path: ['properties', 'name'],
+          feature: 'maxLength',
+          message: 'maxLength constraint is not supported',
+        },
+      ]);
+    });
+
+    test('assertSchema throws for Zod string with min()', () => {
+      // Arrange
+      const zodSchema = z.object({ q: z.string().trim().min(1) });
+
+      // Act
+      const act = () => assertSchema({ schema: zodSchema, model: 'openai/gpt-5.4' });
+
+      // Assert
+      expect(act).toThrow();
+    });
+  });
+
+  describe('passes documented string, number and array properties', () => {
+    test('passes for pattern, format, minimum, maximum, minItems and maxItems', () => {
+      // Arrange
+      const jsonSchema: JSONSchema = {
+        type: 'object',
+        properties: {
+          code: { type: 'string', pattern: '^[A-Z]{3}$' },
+          email: { type: 'string', format: 'email' },
+          temperature: { type: 'number', minimum: -130, maximum: 130 },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            minItems: 1,
+            maxItems: 5,
+          },
+        },
+        required: ['code', 'email', 'temperature', 'tags'],
+        additionalProperties: false,
+      };
+
+      // Act
+      const result = validateSchema({
+        schema: jsonSchema,
+        model: 'openai/gpt-4o',
+      });
+
+      // Assert
+      expect(result.success).toBe(true);
     });
   });
 
