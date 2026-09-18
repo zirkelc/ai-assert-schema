@@ -99,9 +99,7 @@ describe('assertSchema', () => {
         expect(schemaError.result.models.length).toBe(1);
         expect(schemaError.result.models[0]?.provider).toBe('openai');
         expect(schemaError.result.models[0]?.modelId).toBe('gpt-4o');
-        expect(schemaError.result.models[0]?.jsonSchema).toBe(
-          invalidJsonSchema,
-        );
+        expect(schemaError.result.models[0]?.jsonSchema).toBe(invalidJsonSchema);
         expect(schemaError.message).toContain('unsupported components');
         expect(schemaError.message).toContain('oneOf');
         expect(schemaError.result.models[0]?.issues.length).toBeGreaterThan(0);
@@ -136,9 +134,7 @@ describe('assertSchema', () => {
 
       expect(result.success).toBe(false);
       expect(result.models.length).toBe(1);
-      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(
-        true,
-      );
+      expect(result.models[0]?.issues.some((i) => i.feature === 'oneOf')).toBe(true);
     });
   });
 

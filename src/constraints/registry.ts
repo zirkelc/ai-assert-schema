@@ -122,9 +122,7 @@ export class ProviderRegistry {
     }
 
     // No match - return permissive defaults with warning
-    console.warn(
-      `[ai-assert-schema] Unknown model "${modelIdentifier}" - no constraints applied.`,
-    );
+    console.warn(`[ai-assert-schema] Unknown model "${modelIdentifier}" - no constraints applied.`);
 
     return {
       provider: parsedModel.provider,
@@ -138,12 +136,10 @@ export class ProviderRegistry {
    * Get all registered patterns with their resolved constraints
    */
   getAll(): ProviderConstraintsEntry[] {
-    return Array.from(this.registry.entries()).map(
-      ([pattern, constraints]) => ({
-        pattern,
-        constraints,
-      }),
-    );
+    return Array.from(this.registry.entries()).map(([pattern, constraints]) => ({
+      pattern,
+      constraints,
+    }));
   }
 }
 

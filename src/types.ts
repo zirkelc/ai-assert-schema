@@ -1,16 +1,10 @@
-import type {
-  StandardJSONSchemaV1,
-  StandardSchemaV1,
-} from '@standard-schema/spec';
+import type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
 import type { JSONSchema7, JSONSchema7Definition } from 'json-schema';
 
 /**
  * Re-export Standard Schema types from official package
  */
-export type {
-  StandardJSONSchemaV1,
-  StandardSchemaV1,
-} from '@standard-schema/spec';
+export type { StandardJSONSchemaV1, StandardSchemaV1 } from '@standard-schema/spec';
 
 /**
  * Extended JSON Schema type that includes properties from Draft 2020-12
@@ -140,11 +134,7 @@ export interface SimpleConstraintRule extends ConstraintRuleBase {
  * Custom constraint rule - uses a validate function for complex logic
  */
 export interface CustomConstraintRule extends ConstraintRuleBase {
-  validate: (
-    schema: JSONSchema,
-    path: string[],
-    isRoot: boolean,
-  ) => ValidationIssue[];
+  validate: (schema: JSONSchema, path: string[], isRoot: boolean) => ValidationIssue[];
 }
 
 /**
@@ -166,11 +156,7 @@ export interface ValidationIssue {
  */
 export interface CustomValidator {
   name: string;
-  validate: (
-    schema: JSONSchema,
-    path: string[],
-    isRoot: boolean,
-  ) => ValidationIssue[];
+  validate: (schema: JSONSchema, path: string[], isRoot: boolean) => ValidationIssue[];
 }
 
 /** JSON Schema target versions */
@@ -261,9 +247,7 @@ export interface ProviderConstraintsEntry {
  * - Use `provider` to reference a built-in provider by name
  * - Use `constraints` to provide custom constraints
  */
-export type ProviderRegistryEntry =
-  | ProviderAliasEntry
-  | ProviderConstraintsEntry;
+export type ProviderRegistryEntry = ProviderAliasEntry | ProviderConstraintsEntry;
 
 /**
  * Resolved constraints for a specific provider/model combination
@@ -306,9 +290,7 @@ export type SchemaInput = StandardSchemaV1 | StandardJSONSchemaV1 | JSONSchema;
 /**
  * Options for validateSchema
  */
-export interface ValidateSchemaOptions<
-  SCHEMA extends SchemaInput = SchemaInput,
-> {
+export interface ValidateSchemaOptions<SCHEMA extends SchemaInput = SchemaInput> {
   model: ModelIdentifier | Array<ModelIdentifier>;
   schema: SCHEMA;
   /** Override JSON Schema target (default: draft-07, matching AI SDK) */
@@ -345,5 +327,4 @@ export interface ValidateSchemaOptions<
 /**
  * Options for assertSchema (same as validateSchema, always throws on error)
  */
-export type AssertSchemaOptions<SCHEMA extends SchemaInput = SchemaInput> =
-  ValidateSchemaOptions<SCHEMA>;
+export type AssertSchemaOptions<SCHEMA extends SchemaInput = SchemaInput> = ValidateSchemaOptions<SCHEMA>;

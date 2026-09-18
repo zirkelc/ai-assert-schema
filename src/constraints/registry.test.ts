@@ -30,9 +30,7 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const constraints = providerRegistry.resolve(
-        'exact-provider/exact-model',
-      );
+      const constraints = providerRegistry.resolve('exact-provider/exact-model');
       expect(constraints.provider).toBe('exact-provider');
       expect(constraints.unsupported[0]?.feature).toBe('oneOf');
     });
@@ -56,9 +54,7 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const constraints = providerRegistry.resolve(
-        'priority-test/special-model',
-      );
+      const constraints = providerRegistry.resolve('priority-test/special-model');
       // Exact match should win
       expect(constraints.provider).toBe('priority-test-exact');
       expect(constraints.unsupported).toEqual([]);
@@ -83,9 +79,7 @@ describe('ProviderRegistry', () => {
         },
       });
 
-      const constraints = providerRegistry.resolve(
-        'last-match-test/restricted-model',
-      );
+      const constraints = providerRegistry.resolve('last-match-test/restricted-model');
       // Last matching pattern should win
       expect(constraints.provider).toBe('last-match-specific');
       expect(constraints.unsupported).toHaveLength(1);
@@ -135,9 +129,7 @@ describe('ProviderRegistry', () => {
 
     test('includes built-in OpenAI provider', () => {
       const providers = providerRegistry.getAll();
-      const hasOpenAI = providers.some(
-        (p) => p.pattern instanceof RegExp && p.pattern.test('openai/gpt-4o'),
-      );
+      const hasOpenAI = providers.some((p) => p.pattern instanceof RegExp && p.pattern.test('openai/gpt-4o'));
       expect(hasOpenAI).toBe(true);
     });
   });
@@ -159,9 +151,7 @@ describe('ProviderRegistry', () => {
     });
 
     test('returns unknown provider for unregistered models', () => {
-      const constraints = providerRegistry.resolve(
-        'unknown-provider/some-model',
-      );
+      const constraints = providerRegistry.resolve('unknown-provider/some-model');
       expect(constraints.provider).toBe('unknown-provider');
       expect(constraints.unsupported).toEqual([]);
     });
