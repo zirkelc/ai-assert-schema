@@ -68,9 +68,7 @@ import type { AssertSchemaOptions, SchemaInput } from './types.js';
  *
  * @throws {SchemaAssertionError} When schema contains unsupported features
  */
-export function assertSchema<SCHEMA extends SchemaInput>(
-  options: AssertSchemaOptions<SCHEMA>,
-): SCHEMA {
+export function assertSchema<SCHEMA extends SchemaInput>(options: AssertSchemaOptions<SCHEMA>): SCHEMA {
   const result = validateSchema(options);
 
   if (!result.success) {

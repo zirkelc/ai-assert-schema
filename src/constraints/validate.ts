@@ -36,52 +36,46 @@ import { providerRegistry } from './registry.js';
  * }
  * ```
  */
-export function validateSchema<T extends SchemaInput>(
-  options: ValidateSchemaOptions<T>,
-): SchemaValidationResult {
+export function validateSchema<T extends SchemaInput>(options: ValidateSchemaOptions<T>): SchemaValidationResult {
   const { model, schema, target, io, constraints: customConstraints } = options;
 
   // Normalize model to array
-  const modelArray: Array<ModelIdentifier> = Array.isArray(model)
-    ? model
-    : [model];
+  const modelArray: Array<ModelIdentifier> = Array.isArray(model) ? model : [model];
 
   // Cache extracted schemas by target to avoid redundant calls
   const schemaCache = new Map<string | undefined, JSONSchema>();
 
   // Validate schema against each model's constraints
-  const modelValidationResults: Array<ModelValidationResult> = modelArray.map(
-    (m) => {
-      const constraints: ResolvedConstraints = customConstraints
-        ? {
-            provider: customConstraints.provider,
-            modelId: parseModel(m).modelId,
-            unsupported: customConstraints.unsupported,
-            customValidators: customConstraints.customValidators ?? [],
-            jsonSchemaTarget: customConstraints.jsonSchemaTarget,
-          }
-        : providerRegistry.resolve(m);
+  const modelValidationResults: Array<ModelValidationResult> = modelArray.map((m) => {
+    const constraints: ResolvedConstraints = customConstraints
+      ? {
+          provider: customConstraints.provider,
+          modelId: parseModel(m).modelId,
+          unsupported: customConstraints.unsupported,
+          customValidators: customConstraints.customValidators ?? [],
+          jsonSchemaTarget: customConstraints.jsonSchemaTarget,
+        }
+      : providerRegistry.resolve(m);
 
-      // Use explicit target, or provider's target, or undefined (default)
-      const effectiveTarget = target ?? constraints.jsonSchemaTarget;
+    // Use explicit target, or provider's target, or undefined (default)
+    const effectiveTarget = target ?? constraints.jsonSchemaTarget;
 
-      // Extract schema (cached by target)
-      let jsonSchema = schemaCache.get(effectiveTarget);
-      if (!jsonSchema) {
-        jsonSchema = extractJSONSchema(schema, effectiveTarget, io);
-        schemaCache.set(effectiveTarget, jsonSchema);
-      }
+    // Extract schema (cached by target)
+    let jsonSchema = schemaCache.get(effectiveTarget);
+    if (!jsonSchema) {
+      jsonSchema = extractJSONSchema(schema, effectiveTarget, io);
+      schemaCache.set(effectiveTarget, jsonSchema);
+    }
 
-      const issues = validateSchemaConstraints(jsonSchema, constraints);
+    const issues = validateSchemaConstraints(jsonSchema, constraints);
 
-      return {
-        modelId: constraints.modelId,
-        provider: constraints.provider,
-        issues,
-        jsonSchema,
-      };
-    },
-  );
+    return {
+      modelId: constraints.modelId,
+      provider: constraints.provider,
+      issues,
+      jsonSchema,
+    };
+  });
 
   const success = modelValidationResults.every((m) => m.issues.length === 0);
 
@@ -103,10 +97,7 @@ interface TraversalContext {
  * Validate a JSON Schema against provider constraints
  * @internal This is an internal function - use validateSchema from assert-schema.ts instead
  */
-export function validateSchemaConstraints(
-  schema: JSONSchema,
-  constraints: ResolvedConstraints,
-): ValidationIssue[] {
+export function validateSchemaConstraints(schema: JSONSchema, constraints: ResolvedConstraints): ValidationIssue[] {
   const ctx: TraversalContext = {
     path: [],
     isRoot: true,
@@ -163,10 +154,7 @@ function traverseSchema(schema: JSONSchema, ctx: TraversalContext): void {
     }
 
     // Check additionalProperties if it's a schema
-    if (
-      typeof schema.additionalProperties === 'object' &&
-      schema.additionalProperties !== null
-    ) {
+    if (typeof schema.additionalProperties === 'object' && schema.additionalProperties !== null) {
       traverseSchema(schema.additionalProperties, {
         ...ctx,
         path: [...ctx.path, 'additionalProperties'],
@@ -271,11 +259,7 @@ function traverseSchema(schema: JSONSchema, ctx: TraversalContext): void {
   });
 }
 
-function isFeatureUnsupported(
-  feature: SchemaFeature,
-  ctx: TraversalContext,
-  currentContext?: FeatureContext,
-): boolean {
+function isFeatureUnsupported(feature: SchemaFeature, ctx: TraversalContext, currentContext?: FeatureContext): boolean {
   return ctx.constraints.unsupported.some((rule) => {
     if (rule.feature !== feature) return false;
     // Skip CustomConstraintRule - those are handled via validate function
@@ -306,25 +290,18 @@ function getViolatedAllowedValuesRule(
 
     // Check context
     if (rule.context && rule.context !== 'any') {
-      if (currentContext !== undefined && rule.context !== currentContext)
-        continue;
+      if (currentContext !== undefined && rule.context !== currentContext) continue;
     }
 
     // Check if value is in allowed list
-    if (
-      !rule.allowedValues.includes(value as string | number | boolean | null)
-    ) {
+    if (!rule.allowedValues.includes(value as string | number | boolean | null)) {
       return { rule, value };
     }
   }
   return undefined;
 }
 
-function getFeatureMessage(
-  feature: SchemaFeature,
-  ctx: TraversalContext,
-  defaultMessage: string,
-): string {
+function getFeatureMessage(feature: SchemaFeature, ctx: TraversalContext, defaultMessage: string): string {
   const rule = ctx.constraints.unsupported.find((r) => r.feature === feature);
   // Only SimpleConstraintRule has message property
   if (rule && 'message' in rule && rule.message) {
@@ -333,10 +310,7 @@ function getFeatureMessage(
   return defaultMessage;
 }
 
-function checkCompositionKeywords(
-  schema: JSONSchema,
-  ctx: TraversalContext,
-): void {
+function checkCompositionKeywords(schema: JSONSchema, ctx: TraversalContext): void {
   const context: FeatureContext = ctx.isRoot ? 'root' : 'nested';
 
   if (schema.allOf && isFeatureUnsupported('allOf', ctx, context)) {
@@ -353,11 +327,7 @@ function checkCompositionKeywords(
       ctx.issues.push({
         path: [...ctx.path],
         feature: 'rootAnyOf',
-        message: getFeatureMessage(
-          'rootAnyOf',
-          ctx,
-          'anyOf is not supported at root level',
-        ),
+        message: getFeatureMessage('rootAnyOf', ctx, 'anyOf is not supported at root level'),
       });
     } else if (!ctx.isRoot && isFeatureUnsupported('anyOf', ctx, context)) {
       ctx.issues.push({
@@ -374,11 +344,7 @@ function checkCompositionKeywords(
       ctx.issues.push({
         path: [...ctx.path],
         feature: 'rootOneOf',
-        message: getFeatureMessage(
-          'rootOneOf',
-          ctx,
-          'oneOf is not supported at root level',
-        ),
+        message: getFeatureMessage('rootOneOf', ctx, 'oneOf is not supported at root level'),
       });
     } else if (isFeatureUnsupported('oneOf', ctx, context)) {
       ctx.issues.push({
@@ -398,72 +364,37 @@ function checkCompositionKeywords(
   }
 }
 
-function checkConditionalKeywords(
-  schema: JSONSchema,
-  ctx: TraversalContext,
-): void {
+function checkConditionalKeywords(schema: JSONSchema, ctx: TraversalContext): void {
   if (schema.if && isFeatureUnsupported('if', ctx)) {
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'if',
-      message: getFeatureMessage(
-        'if',
-        ctx,
-        'if/then/else conditionals are not supported',
-      ),
+      message: getFeatureMessage('if', ctx, 'if/then/else conditionals are not supported'),
     });
   }
 
-  if (
-    schema.dependentRequired &&
-    isFeatureUnsupported('dependentRequired', ctx)
-  ) {
+  if (schema.dependentRequired && isFeatureUnsupported('dependentRequired', ctx)) {
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'dependentRequired',
-      message: getFeatureMessage(
-        'dependentRequired',
-        ctx,
-        'dependentRequired is not supported',
-      ),
+      message: getFeatureMessage('dependentRequired', ctx, 'dependentRequired is not supported'),
     });
   }
 
-  if (
-    schema.dependentSchemas &&
-    isFeatureUnsupported('dependentSchemas', ctx)
-  ) {
+  if (schema.dependentSchemas && isFeatureUnsupported('dependentSchemas', ctx)) {
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'dependentSchemas',
-      message: getFeatureMessage(
-        'dependentSchemas',
-        ctx,
-        'dependentSchemas is not supported',
-      ),
+      message: getFeatureMessage('dependentSchemas', ctx, 'dependentSchemas is not supported'),
     });
   }
 }
 
-function checkValidationKeywords(
-  schema: JSONSchema,
-  ctx: TraversalContext,
-): void {
+function checkValidationKeywords(schema: JSONSchema, ctx: TraversalContext): void {
   // These are actual JSON Schema keywords that also exist as SchemaFeature
-  const numericKeywords = [
-    'minimum',
-    'maximum',
-    'exclusiveMinimum',
-    'exclusiveMaximum',
-    'multipleOf',
-  ] as const;
+  const numericKeywords = ['minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'] as const;
 
-  const stringKeywords = [
-    'minLength',
-    'maxLength',
-    'pattern',
-    'format',
-  ] as const;
+  const stringKeywords = ['minLength', 'maxLength', 'pattern', 'format'] as const;
 
   for (const keyword of numericKeywords) {
     if (schema[keyword] !== undefined && isFeatureUnsupported(keyword, ctx)) {
@@ -486,22 +417,12 @@ function checkValidationKeywords(
   }
 }
 
-function checkObjectConstraints(
-  schema: JSONSchema,
-  ctx: TraversalContext,
-): void {
-  if (
-    schema.patternProperties &&
-    isFeatureUnsupported('patternProperties', ctx)
-  ) {
+function checkObjectConstraints(schema: JSONSchema, ctx: TraversalContext): void {
+  if (schema.patternProperties && isFeatureUnsupported('patternProperties', ctx)) {
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'patternProperties',
-      message: getFeatureMessage(
-        'patternProperties',
-        ctx,
-        'patternProperties is not supported',
-      ),
+      message: getFeatureMessage('patternProperties', ctx, 'patternProperties is not supported'),
     });
   }
 
@@ -509,11 +430,7 @@ function checkObjectConstraints(
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'propertyNames',
-      message: getFeatureMessage(
-        'propertyNames',
-        ctx,
-        'propertyNames is not supported',
-      ),
+      message: getFeatureMessage('propertyNames', ctx, 'propertyNames is not supported'),
     });
   }
 
@@ -534,19 +451,12 @@ function checkObjectConstraints(
   }
 }
 
-function checkArrayConstraints(
-  schema: JSONSchema,
-  ctx: TraversalContext,
-): void {
+function checkArrayConstraints(schema: JSONSchema, ctx: TraversalContext): void {
   if (schema.prefixItems && isFeatureUnsupported('prefixItems', ctx)) {
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'prefixItems',
-      message: getFeatureMessage(
-        'prefixItems',
-        ctx,
-        'prefixItems is not supported',
-      ),
+      message: getFeatureMessage('prefixItems', ctx, 'prefixItems is not supported'),
     });
   }
 
@@ -562,11 +472,7 @@ function checkArrayConstraints(
     ctx.issues.push({
       path: [...ctx.path],
       feature: 'uniqueItems',
-      message: getFeatureMessage(
-        'uniqueItems',
-        ctx,
-        'uniqueItems is not supported',
-      ),
+      message: getFeatureMessage('uniqueItems', ctx, 'uniqueItems is not supported'),
     });
   }
 
@@ -576,26 +482,16 @@ function checkArrayConstraints(
       ctx.issues.push({
         path: [...ctx.path],
         feature: 'minItems',
-        message: getFeatureMessage(
-          'minItems',
-          ctx,
-          'minItems is not supported',
-        ),
+        message: getFeatureMessage('minItems', ctx, 'minItems is not supported'),
       });
     } else {
       // Check if minItems value violates allowedValues constraint
-      const minItemsViolation = getViolatedAllowedValuesRule(
-        'minItems',
-        schema.minItems,
-        ctx,
-      );
+      const minItemsViolation = getViolatedAllowedValuesRule('minItems', schema.minItems, ctx);
       if (minItemsViolation) {
         ctx.issues.push({
           path: [...ctx.path],
           feature: 'minItems',
-          message:
-            minItemsViolation.rule.message ||
-            `minItems value ${minItemsViolation.value} is not allowed`,
+          message: minItemsViolation.rule.message || `minItems value ${minItemsViolation.value} is not allowed`,
         });
       }
     }

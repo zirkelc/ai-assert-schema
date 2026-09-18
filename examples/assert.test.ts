@@ -9,13 +9,15 @@ const model = 'openai/gpt-4o';
 const tools = {
   getWeather: tool({
     description: 'Get the weather for a location',
-    inputSchema: z.union([z.object({ city: z.string() }), z.object({ lat: z.number(), lon: z.number() })]),
+    inputSchema: z.object({
+      location: z.union([z.object({ city: z.string() }), z.object({ lat: z.number(), lon: z.number() })]),
+    }),
   }),
   searchProducts: tool({
     description: 'Search for products',
     inputSchema: z.object({
       query: z.string(),
-      limit: z.number().optional(),
+      limit: z.number().nullable(),
     }),
   }),
 };

@@ -233,7 +233,7 @@ assertSchema({
 
 ## Providers
 
-Currently supported providers: OpenAI, Anthropic, Google.
+Currently supported providers: OpenAI, Azure OpenAI, Anthropic, Google.
 
 ### Register Custom Providers
 
@@ -264,7 +264,7 @@ assertSchema({
 
 #### Provider Aliases
 
-You can also register aliases that reference built-in providers (`'openai'`, `'anthropic'`, or `'google'`) instead of providing full constraints:
+You can also register aliases that reference built-in providers (`'openai'`, `'azure'`, `'anthropic'`, or `'google'`) instead of providing full constraints:
 
 ```typescript
 import { assertSchema } from 'ai-assert-schema';
@@ -351,13 +351,28 @@ assertSchema.registry.register({
 
 ### Azure OpenAI
 
-Azure OpenAI uses the same constraints as OpenAI. The built-in registry resolves Azure models using the following patterns:
+The built-in registry resolves Azure models using the following patterns:
 
 - `'azure/*openai*'`
 - `'azure.chat/*openai*'`
 - `'azure.responses/*openai*'`
 
-If your deployment names do not follow this pattern, you can register custom patterns using `assertSchema.registry.register()`:
+#### Constraints
+
+Azure OpenAI's Structured Outputs have stricter [JSON Schema constraints](https://learn.microsoft.com/en-us/azure/foundry/openai/how-to/structured-outputs#json-schema-support-and-limitations) than OpenAI. All [OpenAI constraints](#openai) apply. See the full constraint implementation in [`src/constraints/azure/azure.ts`](src/constraints/azure/azure.ts).
+
+> [!WARNING] 
+> The constraints were implemented following the official documentation. If you find any discrepancies with actual behavior, please open an issue.
+
+**Additional unsupported JSON Schema features:**
+- `minLength`, `maxLength`, `pattern`, `format` (string constraints)
+- `minimum`, `maximum`, `multipleOf` (numerical constraints)
+- `unevaluatedProperties`, `propertyNames`, `minProperties`, `maxProperties` (object constraints)
+- `unevaluatedItems`, `contains`, `minContains`, `maxContains`, `minItems`, `maxItems`, `uniqueItems` (array constraints)
+
+##### Register Azure Deployments
+
+Azure model IDs are deployment names. If your deployment names do not contain `openai`, register custom patterns using `assertSchema.registry.register()`:
 
 ```typescript
 import { assertSchema } from 'ai-assert-schema';
@@ -365,8 +380,8 @@ import { assertSchema } from 'ai-assert-schema';
 assertSchema.registry.register({
   // Match your custom Azure deployment name
   pattern: 'azure/my-deployment-name',
-  // Use built-in OpenAI constraints
-  provider: 'openai',
+  // Use built-in Azure OpenAI constraints
+  provider: 'azure',
 });
 ```
 
@@ -493,7 +508,7 @@ interface SchemaValidationResult {
 
 The provider registry for registering custom constraints:
 
-- `register({ pattern, provider })` - Register a pattern using built-in provider constraints (`'openai'` or `'anthropic'`)
+- `register({ pattern, provider })` - Register a pattern using built-in provider constraints (`'openai'`, `'azure'`, `'anthropic'` or `'google'`)
 - `register({ pattern, constraints })` - Register a pattern with custom constraints
 - `resolve(model)` - Resolve constraints for a model
 - `getAll()` - Get all registered patterns with their resolved constraints

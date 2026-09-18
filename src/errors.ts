@@ -14,8 +14,7 @@ export class SchemaAssertionError extends Error {
       const issueCount = model.issues.length;
       const issueWord = issueCount === 1 ? 'issue' : 'issues';
       const issueLines = model.issues.map((issue, index) => {
-        const path =
-          issue.path.length > 0 ? ` at "${issue.path.join('.')}"` : '';
+        const path = issue.path.length > 0 ? ` at "${issue.path.join('.')}"` : '';
         return `  ${index + 1}. ${issue.feature}${path}`;
       });
       return `- ${model.provider}/${model.modelId} (${issueCount} ${issueWord}):\n${issueLines.join('\n')}`;

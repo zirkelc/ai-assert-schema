@@ -9,6 +9,7 @@ import type {
   ResolvedConstraints,
 } from '../types.js';
 import { anthropicConstraints } from './anthropic/anthropic.js';
+import { azureConstraints } from './azure/azure.js';
 import { googleConstraints } from './google/google.js';
 import { openaiConstraints } from './openai/openai.js';
 
@@ -17,6 +18,7 @@ import { openaiConstraints } from './openai/openai.js';
  */
 const builtInProviders: Record<BuiltInProvider, ProviderConstraints> = {
   openai: openaiConstraints,
+  azure: azureConstraints,
   anthropic: anthropicConstraints,
   google: googleConstraints,
 };
@@ -44,7 +46,7 @@ export class ProviderRegistry {
    * // Reference built-in provider by name
    * registry.register({
    *   pattern: /^azure\/.*openai.*$/,
-   *   provider: 'openai',
+   *   provider: 'azure',
    * });
    *
    * // Or provide custom constraints
@@ -122,9 +124,7 @@ export class ProviderRegistry {
     }
 
     // No match - return permissive defaults with warning
-    console.warn(
-      `[ai-assert-schema] Unknown model "${modelIdentifier}" - no constraints applied.`,
-    );
+    console.warn(`[ai-assert-schema] Unknown model "${modelIdentifier}" - no constraints applied.`);
 
     return {
       provider: parsedModel.provider,
@@ -138,12 +138,10 @@ export class ProviderRegistry {
    * Get all registered patterns with their resolved constraints
    */
   getAll(): ProviderConstraintsEntry[] {
-    return Array.from(this.registry.entries()).map(
-      ([pattern, constraints]) => ({
-        pattern,
-        constraints,
-      }),
-    );
+    return Array.from(this.registry.entries()).map(([pattern, constraints]) => ({
+      pattern,
+      constraints,
+    }));
   }
 }
 
@@ -173,7 +171,7 @@ providerRegistry.register({
  */
 providerRegistry.register({
   pattern: /^(azure|azure\.chat|azure\.responses)\/.*openai.*$/,
-  provider: 'openai',
+  provider: 'azure',
 });
 
 /**
